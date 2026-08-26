@@ -28,10 +28,13 @@ diga o que precisar que eu configure no código.
      where email = 'seu-email@estaleiromaua.com.br';
      ```
 
-## 2. Vercel
+## 2. GitHub + Vercel
 
-1. Crie o repositório Git deste projeto no GitHub/GitLab (pasta
-   `controle-obras`) e faça o push do commit inicial.
+O repositório Git local já existe (`git init` + commit inicial feitos).
+Falta só o remoto, que exige sua conta:
+
+1. Crie um repositório **vazio** no GitHub (sem README/gitignore) e me passe
+   a URL — eu adiciono o remote e faço o push do commit já existente.
 2. Em https://vercel.com, **Add New → Project**, importe esse repositório.
 3. Em **Environment Variables**, adicione as mesmas três variáveis do passo 1
    (não cole a `service_role` a menos que uma rota server-side precise dela).
