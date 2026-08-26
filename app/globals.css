@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+/* Design tokens herdados do design system "Metas Mauá 2026" — ver
+   MetasMaua2026/metas-maua/DESIGN_SYSTEM.md no workspace principal. */
+@theme {
+  --color-maua-orange:   #F18213;
+  --color-maua-navy:     #364B59;
+  --color-maua-white:    #FFFFFF;
+  --color-maua-gray-50:  #E7EAEE;
+  --color-maua-gray-100: #F1F3F5;
+  --color-maua-gray-200: #E2E8F0;
+  --color-maua-gray-400: #94A3B8;
+  --color-maua-gray-500: #6B7280;
+  --color-maua-gray-700: #374151;
+  --color-maua-gray-900: #111827;
+
+  --color-primary:    var(--color-maua-navy);
+  --color-accent:     var(--color-maua-orange);
+  --color-background: var(--color-maua-white);
+  --color-surface:    var(--color-maua-gray-50);
+  --color-border:     var(--color-maua-gray-200);
+  --color-text:       var(--color-maua-gray-900);
+
+  --color-goal-low:  #DFA1AA;
+  --color-goal-mid:  #F9E79F;
+  --color-goal-high: #9AD595;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-elevated: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+html {
+  font-family: var(--font-sans);
+  background-color: var(--color-background);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
