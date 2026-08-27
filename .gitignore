@@ -41,6 +41,7 @@ yarn-error.log*
 # duplicados) — o logo de verdade vive em public/estaleiro-maua-logo.png
 /image.png
 /estaleiro-maua-logo-1.png
+/Captura de tela*.png
 
 # typescript
 *.tsbuildinfo

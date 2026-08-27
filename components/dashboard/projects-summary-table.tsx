@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { formatCurrencyBRL } from "@/lib/utils";
 import type { ProjectSummaryRow } from "@/lib/services/projects";
 
@@ -125,8 +126,13 @@ export function ProjectsSummaryTable({ rows }: { rows: ProjectSummaryRow[] }) {
             const s = row.summary ?? ZERO;
             return (
               <tr key={row.id} className="hover:bg-maua-gray-50">
-                <td className="border-b border-border px-3 py-2 font-mono text-xs text-maua-gray-700">
-                  {row.cc}
+                <td className="border-b border-border px-3 py-2 font-mono text-xs">
+                  <Link
+                    href={`/projetos/${row.id}`}
+                    className="font-semibold text-maua-navy hover:underline"
+                  >
+                    {row.cc}
+                  </Link>
                 </td>
                 <td className="border-b border-border px-3 py-2 text-maua-gray-900">
                   {row.client}
