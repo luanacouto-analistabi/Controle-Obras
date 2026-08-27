@@ -25,17 +25,25 @@ export default async function EditarProjetoPage({
     notFound();
   }
 
-  const { project, paymentEvents, billingEvents, lastChange } = data;
+  const { project, paymentEvents, lastChange } = data;
   const canEdit = user.role !== "visualizador";
 
   return (
     <div className="mx-auto flex max-w-[1100px] flex-col gap-5">
-      <Link
-        href="/configuracao"
-        className="w-fit text-sm font-semibold text-maua-navy hover:underline"
-      >
-        ← Voltar à configuração
-      </Link>
+      <div className="flex items-center justify-between">
+        <Link
+          href="/configuracao"
+          className="w-fit text-sm font-semibold text-maua-navy hover:underline"
+        >
+          ← Voltar à configuração
+        </Link>
+        <Link
+          href={`/configuracao/${project.id}/faturamento`}
+          className="h-9 rounded-lg bg-[#F18213] px-4 text-sm font-bold text-white transition-colors hover:bg-[#D9730D] flex items-center"
+        >
+          Atualização Faturamento
+        </Link>
+      </div>
 
       <div>
         <h1 className="text-xl font-bold text-maua-navy">
@@ -54,12 +62,7 @@ export default async function EditarProjetoPage({
       </div>
 
       {canEdit ? (
-        <ProjectForm
-          mode="edit"
-          project={project}
-          paymentEvents={paymentEvents}
-          billingEvents={billingEvents}
-        />
+        <ProjectForm mode="edit" project={project} paymentEvents={paymentEvents} />
       ) : (
         <div className="rounded-xl border border-dashed border-border bg-white p-6 text-sm text-maua-gray-500 shadow-card">
           Seu perfil (Visualizador) não tem permissão para editar projetos.

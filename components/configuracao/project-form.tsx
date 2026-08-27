@@ -1,16 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useState } from "react";
 import {
   createProjectAction,
   updateProjectAction,
   type ProjectFormState,
 } from "@/lib/actions/projects";
-import type {
-  BillingEvent,
-  PaymentEvent,
-  Project,
-} from "@/types/database.types";
+import type { PaymentEvent, Project } from "@/types/database.types";
 
 type PaymentRowState = {
   key: string;
@@ -26,15 +23,6 @@ type PaymentRowState = {
   invoice_number: string;
 };
 
-type BillingRowState = {
-  key: string;
-  id?: string;
-  billing_date: string;
-  billed_amount: string;
-  overdue_amount: string;
-  new_billing_date: string;
-};
-
 function newPaymentRow(): PaymentRowState {
   return {
     key: crypto.randomUUID(),
@@ -47,16 +35,6 @@ function newPaymentRow(): PaymentRowState {
     measurement_date: "",
     po_issued: false,
     invoice_number: "",
-  };
-}
-
-function newBillingRow(): BillingRowState {
-  return {
-    key: crypto.randomUUID(),
-    billing_date: "",
-    billed_amount: "",
-    overdue_amount: "",
-    new_billing_date: "",
   };
 }
 
@@ -76,17 +54,6 @@ function paymentRowFromEvent(event: PaymentEvent): PaymentRowState {
   };
 }
 
-function billingRowFromEvent(event: BillingEvent): BillingRowState {
-  return {
-    key: event.id,
-    id: event.id,
-    billing_date: event.billing_date,
-    billed_amount: String(event.billed_amount),
-    overdue_amount: String(event.overdue_amount),
-    new_billing_date: event.new_billing_date ?? "",
-  };
-}
-
 const inputClass =
   "h-10 rounded-lg border border-border bg-white px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-accent/50 focus-visible:border-accent w-full";
 const labelClass = "text-sm font-medium text-maua-navy";
@@ -97,7 +64,6 @@ type ProjectFormProps =
       mode: "edit";
       project: Project;
       paymentEvents: PaymentEvent[];
-      billingEvents: BillingEvent[];
     };
 
 export function ProjectForm(props: ProjectFormProps) {
@@ -113,24 +79,12 @@ export function ProjectForm(props: ProjectFormProps) {
   const [paymentRows, setPaymentRows] = useState<PaymentRowState[]>(() =>
     isEdit ? props.paymentEvents.map(paymentRowFromEvent) : []
   );
-  const [billingRows, setBillingRows] = useState<BillingRowState[]>(() =>
-    isEdit ? props.billingEvents.map(billingRowFromEvent) : []
-  );
 
   function updatePaymentRow(
     key: string,
     patch: Partial<PaymentRowState>
   ) {
     setPaymentRows((rows) =>
-      rows.map((row) => (row.key === key ? { ...row, ...patch } : row))
-    );
-  }
-
-  function updateBillingRow(
-    key: string,
-    patch: Partial<BillingRowState>
-  ) {
-    setBillingRows((rows) =>
       rows.map((row) => (row.key === key ? { ...row, ...patch } : row))
     );
   }
@@ -150,20 +104,9 @@ export function ProjectForm(props: ProjectFormProps) {
     }))
   );
 
-  const billingEventsJson = JSON.stringify(
-    billingRows.map((row) => ({
-      id: row.id,
-      billing_date: row.billing_date,
-      billed_amount: Number(row.billed_amount || 0),
-      overdue_amount: Number(row.overdue_amount || 0),
-      new_billing_date: row.new_billing_date || null,
-    }))
-  );
-
   return (
     <form action={formAction} className="flex flex-col gap-6">
       <input type="hidden" name="paymentEvents" value={paymentEventsJson} />
-      <input type="hidden" name="billingEvents" value={billingEventsJson} />
 
       {/* Bloco 1 — Informações Gerais */}
       <section className="rounded-xl border border-border bg-white p-6 shadow-card">
@@ -399,144 +342,52 @@ export function ProjectForm(props: ProjectFormProps) {
         </div>
       </section>
 
-      {/* Bloco 3 — Informações de Faturamento */}
-      <section className="rounded-xl border border-border bg-white p-6 shadow-card">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-bold text-maua-navy">
-            3. Informações de Faturamento
-          </h2>
-          <button
-            type="button"
-            onClick={() => setBillingRows((rows) => [...rows, newBillingRow()])}
-            className="h-8 rounded-lg bg-maua-navy px-3 text-xs font-bold text-white hover:bg-[#2D3F4A]"
-          >
-            + Adicionar faturamento
-          </button>
-        </div>
-
-        {billingRows.length === 0 && (
-          <p className="text-sm text-maua-gray-500">
-            Nenhum registro de faturamento adicionado ainda.
-          </p>
-        )}
-
-        <div className="flex flex-col gap-4">
-          {billingRows.map((row, index) => (
-            <div
-              key={row.key}
-              className="rounded-lg border border-border bg-surface p-4"
-            >
-              <div className="mb-3 flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-maua-navy/70">
-                  Faturamento {index + 1}
-                </span>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setBillingRows((rows) =>
-                      rows.filter((r) => r.key !== row.key)
-                    )
-                  }
-                  className="text-xs font-semibold text-red-600 hover:underline"
-                >
-                  Remover
-                </button>
-              </div>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                <label className="flex flex-col gap-1.5">
-                  <span className={labelClass}>Data de Faturamento</span>
-                  <input
-                    type="date"
-                    required
-                    value={row.billing_date}
-                    onChange={(e) =>
-                      updateBillingRow(row.key, {
-                        billing_date: e.target.value,
-                      })
-                    }
-                    className={inputClass}
-                  />
-                </label>
-                <label className="flex flex-col gap-1.5">
-                  <span className={labelClass}>Faturado (R$)</span>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={row.billed_amount}
-                    onChange={(e) =>
-                      updateBillingRow(row.key, {
-                        billed_amount: e.target.value,
-                      })
-                    }
-                    className={inputClass}
-                  />
-                </label>
-                <label className="flex flex-col gap-1.5">
-                  <span className={labelClass}>Vencido (R$)</span>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={row.overdue_amount}
-                    onChange={(e) =>
-                      updateBillingRow(row.key, {
-                        overdue_amount: e.target.value,
-                      })
-                    }
-                    className={inputClass}
-                  />
-                </label>
-                <label className="flex flex-col gap-1.5">
-                  <span className={labelClass}>Nova Data de Faturamento</span>
-                  <input
-                    type="date"
-                    value={row.new_billing_date}
-                    onChange={(e) =>
-                      updateBillingRow(row.key, {
-                        new_billing_date: e.target.value,
-                      })
-                    }
-                    className={inputClass}
-                  />
-                </label>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
       {isEdit && (
-        <section className="rounded-xl border border-[#F18213]/40 bg-[#F18213]/5 p-6 shadow-card">
-          <h2 className="mb-1 text-base font-bold text-maua-navy">
-            Confirmar alteração
-          </h2>
-          <p className="mb-4 text-sm text-maua-gray-500">
-            Toda alteração exige o cronograma atualizado e o motivo — isso
-            fica registrado no histórico do projeto.
-          </p>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <label className="flex flex-col gap-1.5">
-              <span className={labelClass}>Cronograma atualizado (PDF)</span>
-              <input
-                type="file"
-                name="document"
-                accept="application/pdf"
-                required
-                className={inputClass}
-              />
-            </label>
-            <label className="flex flex-col gap-1.5">
-              <span className={labelClass}>Motivo da alteração/postergação</span>
-              <input
-                name="change_reason"
-                required
-                placeholder="ex.: Atraso na aprovação do cliente"
-                className={inputClass}
-              />
-            </label>
+        <>
+          <div className="rounded-xl border border-dashed border-border bg-white p-4 text-sm text-maua-gray-500 shadow-card">
+            Faturamento (Bloco 3) mudou de lugar —{" "}
+            <Link
+              href={`/configuracao/${props.project.id}/faturamento`}
+              className="font-semibold text-maua-navy hover:underline"
+            >
+              atualize em &ldquo;Atualização Faturamento&rdquo;
+            </Link>
+            .
           </div>
-        </section>
+
+          <section className="rounded-xl border border-[#F18213]/40 bg-[#F18213]/5 p-6 shadow-card">
+            <h2 className="mb-1 text-base font-bold text-maua-navy">
+              Confirmar alteração
+            </h2>
+            <p className="mb-4 text-sm text-maua-gray-500">
+              Toda alteração exige o cronograma atualizado e o motivo — isso
+              fica registrado no histórico do projeto.
+            </p>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <label className="flex flex-col gap-1.5">
+                <span className={labelClass}>Cronograma atualizado (PDF)</span>
+                <input
+                  type="file"
+                  name="document"
+                  accept="application/pdf"
+                  required
+                  className={inputClass}
+                />
+              </label>
+              <label className="flex flex-col gap-1.5">
+                <span className={labelClass}>
+                  Motivo da alteração/postergação
+                </span>
+                <input
+                  name="change_reason"
+                  required
+                  placeholder="ex.: Atraso na aprovação do cliente"
+                  className={inputClass}
+                />
+              </label>
+            </div>
+          </section>
+        </>
       )}
 
       {state?.error && (

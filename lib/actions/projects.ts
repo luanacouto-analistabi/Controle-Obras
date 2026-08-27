@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { ProjectFormSchema } from "@/lib/validators/project";
 import { createProject, updateProject } from "@/lib/services/project-mutations";
 import { getCurrentUser } from "@/lib/supabase/dal";
+import { getErrorMessage } from "@/lib/utils";
 
 export type ProjectFormState = { error?: string } | undefined;
 
@@ -19,15 +20,13 @@ function parseFormPayload(formData: FormData) {
   };
 
   let paymentEvents: unknown = [];
-  let billingEvents: unknown = [];
   try {
     paymentEvents = JSON.parse(String(formData.get("paymentEvents") ?? "[]"));
-    billingEvents = JSON.parse(String(formData.get("billingEvents") ?? "[]"));
   } catch {
     // deixa o zod rejeitar o formato inválido abaixo
   }
 
-  return { general, paymentEvents, billingEvents };
+  return { general, paymentEvents };
 }
 
 export async function createProjectAction(
@@ -49,9 +48,7 @@ export async function createProjectAction(
     const project = await createProject(parsed.data, user.id);
     projectId = project.id;
   } catch (err) {
-    return {
-      error: err instanceof Error ? err.message : "Erro ao criar projeto.",
-    };
+    return { error: getErrorMessage(err, "Erro ao criar projeto.") };
   }
 
   revalidatePath("/configuracao");
@@ -94,9 +91,7 @@ export async function updateProjectAction(
       userId: user.id,
     });
   } catch (err) {
-    return {
-      error: err instanceof Error ? err.message : "Erro ao salvar alteração.",
-    };
+    return { error: getErrorMessage(err, "Erro ao salvar alteração.") };
   }
 
   revalidatePath(`/configuracao/${projectId}`);

@@ -33,6 +33,9 @@ export const PaymentEventInputSchema = z.object({
 
 export const BillingEventInputSchema = z.object({
   id: z.string().optional(),
+  payment_event_id: z
+    .string()
+    .min(1, { error: "Selecione a qual evento de pagamento este faturamento se refere." }),
   billing_date: z.string().min(1, { error: "Informe a data de faturamento." }),
   billed_amount: z.number({ error: "Informe um valor válido." }).min(0),
   overdue_amount: z.number({ error: "Informe um valor válido." }).min(0),
@@ -42,6 +45,9 @@ export const BillingEventInputSchema = z.object({
 export const ProjectFormSchema = z.object({
   general: ProjectGeneralSchema,
   paymentEvents: z.array(PaymentEventInputSchema),
+});
+
+export const BillingFormSchema = z.object({
   billingEvents: z.array(BillingEventInputSchema),
 });
 
@@ -49,3 +55,4 @@ export type ProjectGeneralInput = z.infer<typeof ProjectGeneralSchema>;
 export type PaymentEventInput = z.infer<typeof PaymentEventInputSchema>;
 export type BillingEventInput = z.infer<typeof BillingEventInputSchema>;
 export type ProjectFormInput = z.infer<typeof ProjectFormSchema>;
+export type BillingFormInput = z.infer<typeof BillingFormSchema>;
