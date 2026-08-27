@@ -37,8 +37,8 @@ export async function updateBillingEventsAction(
     return { error: getErrorMessage(err, "Erro ao salvar faturamento.") };
   }
 
-  revalidatePath(`/configuracao/${projectId}/faturamento`);
+  revalidatePath(`/faturamento/${projectId}`);
   revalidatePath("/configuracao");
   revalidatePath("/");
-  redirect(`/configuracao/${projectId}/faturamento`);
+  redirect(`/faturamento/${projectId}`);
 }

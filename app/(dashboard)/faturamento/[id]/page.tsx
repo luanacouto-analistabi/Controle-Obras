@@ -11,7 +11,7 @@ function formatDate(iso: string) {
 
 export default async function AtualizacaoFaturamentoPage({
   params,
-}: PageProps<"/configuracao/[id]/faturamento">) {
+}: PageProps<"/faturamento/[id]">) {
   const { id } = await params;
   const [data, user] = await Promise.all([
     getProjectForEdit(id),
@@ -28,10 +28,10 @@ export default async function AtualizacaoFaturamentoPage({
   return (
     <div className="mx-auto flex max-w-[1000px] flex-col gap-5">
       <Link
-        href={`/configuracao/${project.id}`}
+        href="/faturamento"
         className="w-fit text-sm font-semibold text-maua-navy hover:underline"
       >
-        ← Voltar ao projeto
+        ← Voltar à lista de faturamento
       </Link>
 
       <div>

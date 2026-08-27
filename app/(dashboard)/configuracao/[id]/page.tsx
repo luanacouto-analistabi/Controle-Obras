@@ -38,7 +38,7 @@ export default async function EditarProjetoPage({
           ← Voltar à configuração
         </Link>
         <Link
-          href={`/configuracao/${project.id}/faturamento`}
+          href={`/faturamento/${project.id}`}
           className="h-9 rounded-lg bg-[#F18213] px-4 text-sm font-bold text-white transition-colors hover:bg-[#D9730D] flex items-center"
         >
           Atualização Faturamento

@@ -347,7 +347,7 @@ export function ProjectForm(props: ProjectFormProps) {
           <div className="rounded-xl border border-dashed border-border bg-white p-4 text-sm text-maua-gray-500 shadow-card">
             Faturamento (Bloco 3) mudou de lugar —{" "}
             <Link
-              href={`/configuracao/${props.project.id}/faturamento`}
+              href={`/faturamento/${props.project.id}`}
               className="font-semibold text-maua-navy hover:underline"
             >
               atualize em &ldquo;Atualização Faturamento&rdquo;

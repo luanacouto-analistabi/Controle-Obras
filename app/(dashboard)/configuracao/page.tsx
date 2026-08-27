@@ -102,7 +102,7 @@ export default async function ConfiguracaoPage() {
                   </td>
                   <td className="border-b border-border px-3 py-2 text-right">
                     <Link
-                      href={`/configuracao/${row.id}/faturamento`}
+                      href={`/faturamento/${row.id}`}
                       className="text-sm font-semibold text-maua-navy hover:underline"
                     >
                       Faturamento
