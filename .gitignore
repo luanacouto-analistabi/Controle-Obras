@@ -37,6 +37,11 @@ yarn-error.log*
 # vercel
 .vercel
 
+# arquivos soltos na raiz usados só como referência local (dados reais/
+# duplicados) — o logo de verdade vive em public/estaleiro-maua-logo.png
+/image.png
+/estaleiro-maua-logo-1.png
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
