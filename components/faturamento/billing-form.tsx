@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, type FormEvent } from "react";
 import { updateBillingEventsAction, type BillingFormState } from "@/lib/actions/billing";
 import { formatCurrencyBRL } from "@/lib/utils";
 import type { BillingEvent, PaymentEvent } from "@/types/database.types";
@@ -8,7 +8,7 @@ import type { BillingEvent, PaymentEvent } from "@/types/database.types";
 type BillingRowState = {
   key: string;
   id?: string;
-  payment_event_id: string;
+  payment_event_ids: string[];
   billing_date: string;
   billed_amount: string;
   overdue_amount: string;
@@ -18,7 +18,7 @@ type BillingRowState = {
 function newBillingRow(): BillingRowState {
   return {
     key: crypto.randomUUID(),
-    payment_event_id: "",
+    payment_event_ids: [],
     billing_date: "",
     billed_amount: "",
     overdue_amount: "",
@@ -30,7 +30,7 @@ function billingRowFromEvent(event: BillingEvent): BillingRowState {
   return {
     key: event.id,
     id: event.id,
-    payment_event_id: event.payment_event_id ?? "",
+    payment_event_ids: event.payment_event_id ? [event.payment_event_id] : [],
     billing_date: event.billing_date,
     billed_amount: String(event.billed_amount),
     overdue_amount: String(event.overdue_amount),
@@ -60,6 +60,21 @@ export function BillingForm({
   const [rows, setRows] = useState<BillingRowState[]>(() =>
     billingEvents.map(billingRowFromEvent)
   );
+  const [clientError, setClientError] = useState<string | null>(null);
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    const emptyIndex = rows.findIndex(
+      (row) => row.payment_event_ids.length === 0
+    );
+    if (emptyIndex !== -1) {
+      event.preventDefault();
+      setClientError(
+        `Selecione ao menos uma parcela no Faturamento ${emptyIndex + 1}.`
+      );
+      return;
+    }
+    setClientError(null);
+  }
 
   function updateRow(key: string, patch: Partial<BillingRowState>) {
     setRows((current) =>
@@ -68,20 +83,30 @@ export function BillingForm({
   }
 
   const billingEventsJson = JSON.stringify(
-    rows.map((row) => ({
-      id: row.id,
-      payment_event_id: row.payment_event_id,
-      billing_date: row.billing_date,
-      billed_amount: Number(row.billed_amount || 0),
-      overdue_amount: Number(row.overdue_amount || 0),
-      new_billing_date: row.new_billing_date || null,
-    }))
+    rows.flatMap((row) =>
+      row.payment_event_ids.map((paymentEventId, index) => ({
+        // Uma parcela por registro em billing_events: quando várias parcelas
+        // são marcadas no mesmo bloco, a primeira reaproveita o id existente
+        // (update) e as demais viram novos registros (insert), todas com os
+        // mesmos valores digitados.
+        id: index === 0 ? row.id : undefined,
+        payment_event_id: paymentEventId,
+        billing_date: row.billing_date,
+        billed_amount: Number(row.billed_amount || 0),
+        overdue_amount: Number(row.overdue_amount || 0),
+        new_billing_date: row.new_billing_date || null,
+      }))
+    )
   );
 
   const hasPaymentEvents = paymentEvents.length > 0;
 
   return (
-    <form action={formAction} className="flex flex-col gap-6">
+    <form
+      action={formAction}
+      onSubmit={handleSubmit}
+      className="flex flex-col gap-6"
+    >
       <input type="hidden" name="billingEvents" value={billingEventsJson} />
 
       <section className="rounded-xl border border-border bg-white p-6 shadow-card">
@@ -137,27 +162,36 @@ export function BillingForm({
 
               <div className="mb-3 flex flex-col gap-1.5">
                 <span className={labelClass}>
-                  Evento de pagamento (selecione um)
+                  Evento de pagamento (selecione um ou mais)
                 </span>
                 <div className="flex max-h-40 flex-col gap-1 overflow-y-auto rounded-lg border border-border bg-white p-2">
-                  {paymentEvents.map((pe) => (
-                    <label
-                      key={pe.id}
-                      className="flex items-center gap-2 rounded px-1.5 py-1 text-sm hover:bg-maua-gray-50"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={row.payment_event_id === pe.id}
-                        onChange={() =>
-                          updateRow(row.key, { payment_event_id: pe.id })
-                        }
-                        className="h-4 w-4 accent-[#F18213]"
-                      />
-                      <span>
-                        {pe.payment_event} — {formatCurrencyBRL(pe.amount)}
-                      </span>
-                    </label>
-                  ))}
+                  {paymentEvents.map((pe) => {
+                    const checked = row.payment_event_ids.includes(pe.id);
+                    return (
+                      <label
+                        key={pe.id}
+                        className="flex items-center gap-2 rounded px-1.5 py-1 text-sm hover:bg-maua-gray-50"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() =>
+                            updateRow(row.key, {
+                              payment_event_ids: checked
+                                ? row.payment_event_ids.filter(
+                                    (id) => id !== pe.id
+                                  )
+                                : [...row.payment_event_ids, pe.id],
+                            })
+                          }
+                          className="h-4 w-4 accent-[#F18213]"
+                        />
+                        <span>
+                          {pe.payment_event} — {formatCurrencyBRL(pe.amount)}
+                        </span>
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -219,8 +253,10 @@ export function BillingForm({
         </div>
       </section>
 
-      {state?.error && (
-        <p className="text-sm font-semibold text-red-600">{state.error}</p>
+      {(clientError || state?.error) && (
+        <p className="text-sm font-semibold text-red-600">
+          {clientError ?? state?.error}
+        </p>
       )}
 
       <div className="flex justify-end">
