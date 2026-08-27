@@ -26,7 +26,9 @@ export const PaymentEventInputSchema = z.object({
   payment_condition: z.string().optional().nullable(),
   expected_payment_date: z.string().optional().nullable(),
   amount: z.number({ error: "Informe um valor válido." }).min(0),
-  measurement_date: z.string().optional().nullable(),
+  measurement_status: z.enum(["aprovada", "em_discussao", "prevista"], {
+    error: "Selecione o status da medição.",
+  }),
   po_issued: z.boolean(),
   invoice_number: z.string().optional().nullable(),
 });

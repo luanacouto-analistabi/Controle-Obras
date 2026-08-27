@@ -55,7 +55,7 @@ const PAYMENT_FIELDS: Array<keyof PaymentEventInput> = [
   "payment_condition",
   "expected_payment_date",
   "amount",
-  "measurement_date",
+  "measurement_status",
   "po_issued",
   "invoice_number",
 ];
@@ -167,7 +167,7 @@ function toPaymentEventRow(event: PaymentEventInput, projectId: string) {
     payment_condition: event.payment_condition || null,
     expected_payment_date: event.expected_payment_date || null,
     amount: event.amount,
-    measurement_date: event.measurement_date || null,
+    measurement_status: event.measurement_status,
     po_issued: event.po_issued,
     invoice_number: event.invoice_number || null,
   };

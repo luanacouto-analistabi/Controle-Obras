@@ -18,10 +18,19 @@ type PaymentRowState = {
   payment_condition: string;
   expected_payment_date: string;
   amount: string;
-  measurement_date: string;
+  measurement_status: "aprovada" | "em_discussao" | "prevista";
   po_issued: boolean;
   invoice_number: string;
 };
+
+const MEASUREMENT_STATUS_OPTIONS: Array<{
+  value: PaymentRowState["measurement_status"];
+  label: string;
+}> = [
+  { value: "aprovada", label: "Aprovada" },
+  { value: "em_discussao", label: "Em discussão" },
+  { value: "prevista", label: "Prevista" },
+];
 
 function newPaymentRow(): PaymentRowState {
   return {
@@ -32,7 +41,7 @@ function newPaymentRow(): PaymentRowState {
     payment_condition: "",
     expected_payment_date: "",
     amount: "",
-    measurement_date: "",
+    measurement_status: "prevista",
     po_issued: false,
     invoice_number: "",
   };
@@ -48,7 +57,7 @@ function paymentRowFromEvent(event: PaymentEvent): PaymentRowState {
     payment_condition: event.payment_condition ?? "",
     expected_payment_date: event.expected_payment_date ?? "",
     amount: String(event.amount),
-    measurement_date: event.measurement_date ?? "",
+    measurement_status: event.measurement_status,
     po_issued: event.po_issued,
     invoice_number: event.invoice_number ?? "",
   };
@@ -138,7 +147,7 @@ export function ProjectForm(props: ProjectFormProps) {
       payment_condition: row.payment_condition || null,
       expected_payment_date: row.expected_payment_date || null,
       amount: Number(row.amount || 0),
-      measurement_date: row.measurement_date || null,
+      measurement_status: row.measurement_status,
       po_issued: row.po_issued,
       invoice_number: row.invoice_number || null,
     }))
@@ -386,17 +395,23 @@ export function ProjectForm(props: ProjectFormProps) {
                   />
                 </label>
                 <label className="flex flex-col gap-1.5">
-                  <span className={labelClass}>Data da Medição</span>
-                  <input
-                    type="date"
-                    value={row.measurement_date}
+                  <span className={labelClass}>Status da Medição</span>
+                  <select
+                    value={row.measurement_status}
                     onChange={(e) =>
                       updatePaymentRow(row.key, {
-                        measurement_date: e.target.value,
+                        measurement_status: e.target
+                          .value as PaymentRowState["measurement_status"],
                       })
                     }
                     className={inputClass}
-                  />
+                  >
+                    {MEASUREMENT_STATUS_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
                 </label>
                 <label className="flex items-center gap-2 pt-6">
                   <input

@@ -13,11 +13,7 @@ export type PaymentStatus =
   | "po_nao_emitida"
   | "po_sem_saldo";
 export type DocumentType = "cronograma" | "outro";
-export type MeasurementStatus =
-  | "pendente"
-  | "em_analise"
-  | "aprovada"
-  | "reprovada";
+export type MeasurementStatus = "aprovada" | "em_discussao" | "prevista";
 export type BillingStatus = "a_faturar" | "faturado" | "pendente";
 
 export type Profile = {
