@@ -18,10 +18,27 @@ type PaymentRowState = {
   payment_condition: string;
   expected_payment_date: string;
   amount: string;
+  status:
+    | "previsto"
+    | "em_discussao"
+    | "aprovado"
+    | "po_nao_emitida"
+    | "po_sem_saldo";
   measurement_status: "aprovada" | "em_discussao" | "prevista";
   po_issued: boolean;
   invoice_number: string;
 };
+
+const STATUS_OPTIONS: Array<{
+  value: PaymentRowState["status"];
+  label: string;
+}> = [
+  { value: "previsto", label: "Previsto" },
+  { value: "em_discussao", label: "Em discussão" },
+  { value: "aprovado", label: "Aprovado" },
+  { value: "po_nao_emitida", label: "PO não emitida" },
+  { value: "po_sem_saldo", label: "PO sem saldo" },
+];
 
 const MEASUREMENT_STATUS_OPTIONS: Array<{
   value: PaymentRowState["measurement_status"];
@@ -41,6 +58,7 @@ function newPaymentRow(): PaymentRowState {
     payment_condition: "",
     expected_payment_date: "",
     amount: "",
+    status: "previsto",
     measurement_status: "prevista",
     po_issued: false,
     invoice_number: "",
@@ -57,6 +75,7 @@ function paymentRowFromEvent(event: PaymentEvent): PaymentRowState {
     payment_condition: event.payment_condition ?? "",
     expected_payment_date: event.expected_payment_date ?? "",
     amount: String(event.amount),
+    status: event.status,
     measurement_status: event.measurement_status,
     po_issued: event.po_issued,
     invoice_number: event.invoice_number ?? "",
@@ -147,6 +166,7 @@ export function ProjectForm(props: ProjectFormProps) {
       payment_condition: row.payment_condition || null,
       expected_payment_date: row.expected_payment_date || null,
       amount: Number(row.amount || 0),
+      status: row.status,
       measurement_status: row.measurement_status,
       po_issued: row.po_issued,
       invoice_number: row.invoice_number || null,
@@ -393,6 +413,24 @@ export function ProjectForm(props: ProjectFormProps) {
                     }
                     className={inputClass}
                   />
+                </label>
+                <label className="flex flex-col gap-1.5">
+                  <span className={labelClass}>Status</span>
+                  <select
+                    value={row.status}
+                    onChange={(e) =>
+                      updatePaymentRow(row.key, {
+                        status: e.target.value as PaymentRowState["status"],
+                      })
+                    }
+                    className={inputClass}
+                  >
+                    {STATUS_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
                 </label>
                 <label className="flex flex-col gap-1.5">
                   <span className={labelClass}>Status da Medição</span>

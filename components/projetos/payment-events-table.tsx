@@ -163,7 +163,7 @@ export function PaymentEventsTable({
                                         className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
                                           hasTerm
                                             ? "bg-[#9AD595]/40 text-[#1B5E37]"
-                                            : "bg-maua-gray-100 text-maua-gray-500"
+                                            : "bg-[#DFA1AA]/40 text-[#7C2737]"
                                         }`}
                                       >
                                         {hasTerm ? "Sim" : "Não"}
