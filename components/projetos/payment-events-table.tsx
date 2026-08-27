@@ -2,7 +2,7 @@
 
 import { Fragment, useState } from "react";
 import { filterOsCompletedBy, formatCurrencyBRL } from "@/lib/utils";
-import type { PaymentEvent } from "@/types/database.types";
+import type { OsAcceptanceTerm, PaymentEvent } from "@/types/database.types";
 import type { EapRecord } from "@/types/maua-scp.types";
 
 function formatDate(iso: string | null) {
@@ -13,9 +13,11 @@ function formatDate(iso: string | null) {
 export function PaymentEventsTable({
   paymentEvents,
   eapRows,
+  acceptanceTerms,
 }: {
   paymentEvents: PaymentEvent[];
   eapRows: EapRecord[];
+  acceptanceTerms: Record<string, OsAcceptanceTerm>;
 }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const total = paymentEvents.reduce((sum, e) => sum + e.amount, 0);
@@ -125,7 +127,7 @@ export function PaymentEventsTable({
                                   "Descrição",
                                   "Data Início",
                                   "Data Fim",
-                                  "Progresso",
+                                  "Termo de Aceite",
                                 ].map((label) => (
                                   <th
                                     key={label}
@@ -137,25 +139,39 @@ export function PaymentEventsTable({
                               </tr>
                             </thead>
                             <tbody>
-                              {osRows.map((os) => (
-                                <tr key={os.cod_os}>
-                                  <td className="border-b border-border px-2.5 py-1.5 font-mono">
-                                    {os.cod_os}
-                                  </td>
-                                  <td className="border-b border-border px-2.5 py-1.5">
-                                    {os.descr_os}
-                                  </td>
-                                  <td className="border-b border-border px-2.5 py-1.5 tabular-nums">
-                                    {formatDate(os.data_inicio)}
-                                  </td>
-                                  <td className="border-b border-border px-2.5 py-1.5 tabular-nums">
-                                    {formatDate(os.data_fim)}
-                                  </td>
-                                  <td className="border-b border-border px-2.5 py-1.5 tabular-nums">
-                                    {os.progresso}%
-                                  </td>
-                                </tr>
-                              ))}
+                              {osRows.map((os) => {
+                                const term = acceptanceTerms[os.cod_os];
+                                const hasTerm = Boolean(
+                                  term && (term.signed_at || term.storage_path)
+                                );
+                                return (
+                                  <tr key={os.cod_os}>
+                                    <td className="border-b border-border px-2.5 py-1.5 font-mono">
+                                      {os.cod_os}
+                                    </td>
+                                    <td className="border-b border-border px-2.5 py-1.5">
+                                      {os.descr_os}
+                                    </td>
+                                    <td className="border-b border-border px-2.5 py-1.5 tabular-nums">
+                                      {formatDate(os.data_inicio)}
+                                    </td>
+                                    <td className="border-b border-border px-2.5 py-1.5 tabular-nums">
+                                      {formatDate(os.data_fim)}
+                                    </td>
+                                    <td className="border-b border-border px-2.5 py-1.5">
+                                      <span
+                                        className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                                          hasTerm
+                                            ? "bg-[#9AD595]/40 text-[#1B5E37]"
+                                            : "bg-maua-gray-100 text-maua-gray-500"
+                                        }`}
+                                      >
+                                        {hasTerm ? "Sim" : "Não"}
+                                      </span>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
                             </tbody>
                           </table>
                         </div>

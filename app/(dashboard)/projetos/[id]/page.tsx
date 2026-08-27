@@ -2,7 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { fetchEap } from "@/lib/services/maua-scp";
+import { listOsAcceptanceTerms } from "@/lib/services/acceptance-terms";
 import { PaymentEventsTable } from "@/components/projetos/payment-events-table";
+import type { OsAcceptanceTerm } from "@/types/database.types";
 
 export default async function ProjectDetailPage({
   params,
@@ -23,7 +25,12 @@ export default async function ProjectDetailPage({
     notFound();
   }
 
-  const eapRows = await fetchEap({ codCcusto: project.cc }).catch(() => []);
+  const [eapRows, acceptanceTerms] = await Promise.all([
+    fetchEap({ codCcusto: project.cc }).catch(() => []),
+    listOsAcceptanceTerms(project.id).catch(
+      () => ({}) as Record<string, OsAcceptanceTerm>
+    ),
+  ]);
 
   return (
     <div className="mx-auto flex max-w-[1400px] flex-col gap-5">
@@ -53,6 +60,7 @@ export default async function ProjectDetailPage({
       <PaymentEventsTable
         paymentEvents={paymentEvents ?? []}
         eapRows={eapRows}
+        acceptanceTerms={acceptanceTerms}
       />
     </div>
   );
