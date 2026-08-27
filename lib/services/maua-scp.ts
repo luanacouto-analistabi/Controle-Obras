@@ -26,6 +26,9 @@ async function fetchMauaScp<T>(
     url.searchParams.set(key, value);
   }
 
+  // cache:"no-store" — a resposta da EAP (~5MB) excede o limite de 2MB do
+  // Next Data Cache, então o cache dele nunca ajudaria aqui de qualquer
+  // forma. listCentrosCusto() abaixo tem seu próprio cache em memória.
   const response = await fetch(url, {
     headers: { Authorization: `Bearer ${token}` },
     cache: "no-store",
@@ -49,6 +52,42 @@ export async function fetchEap(filters?: {
     "Maua_Eap.php",
     filters?.codCcusto ? { codccusto: filters.codCcusto } : undefined
   );
+}
+
+export type CentroCusto = { codCcusto: string; descrCcusto: string };
+
+let centrosCustoCache: { data: CentroCusto[]; expiresAt: number } | null = null;
+const CENTROS_CUSTO_CACHE_MS = 5 * 60 * 1000;
+
+/**
+ * Centros de custo distintos da EAP para preencher o <select> de CC no
+ * cadastro de projeto — só os que começam com "02" ou "07" (demais CCs da
+ * carteira não são obras deste sistema).
+ *
+ * Cache em memória de 5 min: a EAP inteira tem ~8 mil linhas e ~5MB, pesado
+ * demais pra buscar de novo a cada carregamento do formulário.
+ */
+export async function listCentrosCusto(): Promise<CentroCusto[]> {
+  if (centrosCustoCache && centrosCustoCache.expiresAt > Date.now()) {
+    return centrosCustoCache.data;
+  }
+
+  const records = await fetchEap();
+
+  const byCc = new Map<string, string>();
+  for (const record of records) {
+    if (!/^(02|07)/.test(record.cod_ccusto)) continue;
+    if (!byCc.has(record.cod_ccusto)) {
+      byCc.set(record.cod_ccusto, record.descr_ccusto);
+    }
+  }
+
+  const list = [...byCc.entries()]
+    .map(([codCcusto, descrCcusto]) => ({ codCcusto, descrCcusto }))
+    .sort((a, b) => a.codCcusto.localeCompare(b.codCcusto));
+
+  centrosCustoCache = { data: list, expiresAt: Date.now() + CENTROS_CUSTO_CACHE_MS };
+  return list;
 }
 
 /** Apontamentos de timesheet num intervalo de datas (YYYY-MM-DD). */

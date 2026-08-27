@@ -8,6 +8,7 @@ import {
   type ProjectFormState,
 } from "@/lib/actions/projects";
 import type { PaymentEvent, Project } from "@/types/database.types";
+import type { CentroCusto } from "@/lib/services/maua-scp";
 
 type PaymentRowState = {
   key: string;
@@ -58,13 +59,14 @@ const inputClass =
   "h-10 rounded-lg border border-border bg-white px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-accent/50 focus-visible:border-accent w-full";
 const labelClass = "text-sm font-medium text-maua-navy";
 
-type ProjectFormProps =
+type ProjectFormProps = { centrosCusto: CentroCusto[] } & (
   | { mode: "create" }
   | {
       mode: "edit";
       project: Project;
       paymentEvents: PaymentEvent[];
-    };
+    }
+);
 
 export function ProjectForm(props: ProjectFormProps) {
   const isEdit = props.mode === "edit";
@@ -79,6 +81,15 @@ export function ProjectForm(props: ProjectFormProps) {
   const [paymentRows, setPaymentRows] = useState<PaymentRowState[]>(() =>
     isEdit ? props.paymentEvents.map(paymentRowFromEvent) : []
   );
+
+  const currentCc = isEdit ? props.project.cc : "";
+  const ccOptions =
+    currentCc && !props.centrosCusto.some((c) => c.codCcusto === currentCc)
+      ? [
+          { codCcusto: currentCc, descrCcusto: "(fora da lista atual da EAP)" },
+          ...props.centrosCusto,
+        ]
+      : props.centrosCusto;
 
   function updatePaymentRow(
     key: string,
@@ -116,15 +127,24 @@ export function ProjectForm(props: ProjectFormProps) {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <label className="flex flex-col gap-1.5">
             <span className={labelClass}>CC</span>
-            <input
+            <select
               name="cc"
               required
-              pattern="\d{6}"
-              title="6 dígitos, sem ponto"
-              placeholder="020227"
-              defaultValue={isEdit ? props.project.cc : ""}
+              defaultValue={currentCc}
+              disabled={ccOptions.length === 0}
               className={inputClass}
-            />
+            >
+              <option value="" disabled>
+                {ccOptions.length === 0
+                  ? "Não foi possível carregar os CCs da EAP"
+                  : "Selecione..."}
+              </option>
+              {ccOptions.map((cc) => (
+                <option key={cc.codCcusto} value={cc.codCcusto}>
+                  {cc.codCcusto} — {cc.descrCcusto}
+                </option>
+              ))}
+            </select>
           </label>
           <label className="flex flex-col gap-1.5">
             <span className={labelClass}>Coordenador de Projeto</span>
