@@ -13,6 +13,12 @@ export type PaymentStatus =
   | "po_nao_emitida"
   | "po_sem_saldo";
 export type DocumentType = "cronograma" | "outro";
+export type MeasurementStatus =
+  | "pendente"
+  | "em_analise"
+  | "aprovada"
+  | "reprovada";
+export type BillingStatus = "a_faturar" | "faturado" | "pendente";
 
 export type Profile = {
   id: string;
@@ -50,6 +56,7 @@ export type PaymentEvent = {
   po_issued: boolean;
   invoice_number: string | null;
   status: PaymentStatus;
+  measurement_status: MeasurementStatus;
   paid_amount: number | null;
   paid_date: string | null;
   created_at: string;
@@ -59,10 +66,12 @@ export type PaymentEvent = {
 export type BillingEvent = {
   id: string;
   project_id: string;
+  payment_event_id: string | null;
   billing_date: string;
   billed_amount: number;
   overdue_amount: number;
   new_billing_date: string | null;
+  billing_status: BillingStatus;
   created_at: string;
   updated_at: string;
 };
@@ -129,6 +138,8 @@ export type Database = {
       project_status: ProjectStatus;
       payment_status: PaymentStatus;
       document_type: DocumentType;
+      measurement_status: MeasurementStatus;
+      billing_status: BillingStatus;
     };
   };
 };
