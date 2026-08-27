@@ -477,17 +477,19 @@ export function ProjectForm(props: ProjectFormProps) {
               Confirmar alteração
             </h2>
             <p className="mb-4 text-sm text-maua-gray-500">
-              Toda alteração exige o cronograma atualizado e o motivo — isso
-              fica registrado no histórico do projeto.
+              Toda alteração exige o motivo — isso fica registrado no
+              histórico do projeto. O anexo do cronograma atualizado (PDF) é
+              opcional.
             </p>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <label className="flex flex-col gap-1.5">
-                <span className={labelClass}>Cronograma atualizado (PDF)</span>
+                <span className={labelClass}>
+                  Cronograma atualizado (PDF) — opcional
+                </span>
                 <input
                   type="file"
                   name="document"
                   accept="application/pdf"
-                  required
                   className={inputClass}
                 />
               </label>

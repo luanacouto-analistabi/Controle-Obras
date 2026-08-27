@@ -68,14 +68,13 @@ export async function updateProjectAction(
 
   const reason = String(formData.get("change_reason") ?? "").trim();
   const document = formData.get("document");
+  const documentFile =
+    document instanceof File && document.size > 0 ? document : null;
 
   if (!reason) {
     return { error: "Informe o motivo da alteração/postergação." };
   }
-  if (!(document instanceof File) || document.size === 0) {
-    return { error: "Anexe o cronograma atualizado (PDF)." };
-  }
-  if (document.type !== "application/pdf") {
+  if (documentFile && documentFile.type !== "application/pdf") {
     return { error: "O cronograma deve ser um arquivo PDF." };
   }
 
@@ -87,7 +86,7 @@ export async function updateProjectAction(
   try {
     await updateProject(projectId, parsed.data, {
       reason,
-      documentFile: document,
+      documentFile,
       userId: user.id,
     });
   } catch (err) {

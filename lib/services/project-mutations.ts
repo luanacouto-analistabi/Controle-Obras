@@ -210,9 +210,10 @@ export async function createProject(input: ProjectFormInput, userId: string) {
 }
 
 /**
- * Salva uma alteração em projeto existente (Bloco 1 + 2): exige motivo +
- * novo PDF do cronograma, calcula o diff campo a campo e grava tudo em
- * project_change_history apontando para o documento anexado.
+ * Salva uma alteração em projeto existente (Bloco 1 + 2): exige motivo
+ * (o PDF do cronograma é opcional), calcula o diff campo a campo e grava
+ * tudo em project_change_history apontando para o documento anexado,
+ * quando houver.
  *
  * Faturamento (Bloco 3) não passa mais por aqui — tem seu próprio fluxo em
  * updateBillingEvents(), sem exigir PDF/motivo (ver "Atualização Faturamento").
@@ -224,7 +225,7 @@ export async function createProject(input: ProjectFormInput, userId: string) {
 export async function updateProject(
   projectId: string,
   input: ProjectFormInput,
-  opts: { reason: string; documentFile: File; userId: string }
+  opts: { reason: string; documentFile: File | null; userId: string }
 ) {
   const supabase = await createClient();
 
@@ -255,31 +256,35 @@ export async function updateProject(
     throw new Error("Nenhuma alteração para salvar.");
   }
 
-  const nextVersion = (latestDoc?.version ?? 0) + 1;
-  const storagePath = `${projectId}/v${nextVersion}/${Date.now()}-${opts.documentFile.name}`;
+  let documentId: string | null = null;
+  if (opts.documentFile) {
+    const nextVersion = (latestDoc?.version ?? 0) + 1;
+    const storagePath = `${projectId}/v${nextVersion}/${Date.now()}-${opts.documentFile.name}`;
 
-  const { error: uploadError } = await supabase.storage
-    .from("project-documents")
-    .upload(storagePath, opts.documentFile, { contentType: "application/pdf" });
-  if (uploadError) {
-    throw new Error(
-      `Falha ao enviar o PDF (o bucket "project-documents" existe no Storage?): ${uploadError.message}`
-    );
+    const { error: uploadError } = await supabase.storage
+      .from("project-documents")
+      .upload(storagePath, opts.documentFile, { contentType: "application/pdf" });
+    if (uploadError) {
+      throw new Error(
+        `Falha ao enviar o PDF (o bucket "project-documents" existe no Storage?): ${uploadError.message}`
+      );
+    }
+
+    const { data: document, error: documentError } = await supabase
+      .from("project_documents")
+      .insert({
+        project_id: projectId,
+        file_name: opts.documentFile.name,
+        storage_path: storagePath,
+        version: nextVersion,
+        document_type: "cronograma",
+        uploaded_by: opts.userId,
+      })
+      .select()
+      .single();
+    if (documentError) throw documentError;
+    documentId = document.id;
   }
-
-  const { data: document, error: documentError } = await supabase
-    .from("project_documents")
-    .insert({
-      project_id: projectId,
-      file_name: opts.documentFile.name,
-      storage_path: storagePath,
-      version: nextVersion,
-      document_type: "cronograma",
-      uploaded_by: opts.userId,
-    })
-    .select()
-    .single();
-  if (documentError) throw documentError;
 
   const { error: updateError } = await supabase
     .from("projects")
@@ -325,7 +330,7 @@ export async function updateProject(
         old_value: change.old_value,
         new_value: change.new_value,
         change_reason: opts.reason,
-        document_id: document.id,
+        document_id: documentId,
       }))
     );
   if (historyError) throw historyError;
