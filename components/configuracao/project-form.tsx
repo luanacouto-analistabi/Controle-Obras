@@ -177,28 +177,25 @@ export function ProjectForm(props: ProjectFormProps) {
               ))}
             </select>
           </label>
-          <div className="flex flex-col gap-1.5">
-            <span className={labelClass}>
-              Coordenador de Projeto (selecione um)
-            </span>
-            <input type="hidden" name="project_coordinator" value={coordinator} />
-            <div className="flex max-h-40 flex-col gap-1 overflow-y-auto rounded-lg border border-border bg-white p-2">
+          <label className="flex flex-col gap-1.5">
+            <span className={labelClass}>Coordenador de Projeto</span>
+            <select
+              name="project_coordinator"
+              required
+              value={coordinator}
+              onChange={(e) => setCoordinator(e.target.value)}
+              className={inputClass}
+            >
+              <option value="" disabled>
+                Selecione...
+              </option>
               {coordinatorOptions.map((name) => (
-                <label
-                  key={name}
-                  className="flex items-center gap-2 rounded px-1.5 py-1 text-sm hover:bg-maua-gray-50"
-                >
-                  <input
-                    type="checkbox"
-                    checked={coordinator === name}
-                    onChange={() => setCoordinator(name)}
-                    className="h-4 w-4 accent-[#F18213]"
-                  />
-                  <span>{name}</span>
-                </label>
+                <option key={name} value={name}>
+                  {name}
+                </option>
               ))}
-            </div>
-          </div>
+            </select>
+          </label>
           <label className="flex flex-col gap-1.5">
             <span className={labelClass}>Cliente</span>
             <input
@@ -208,36 +205,30 @@ export function ProjectForm(props: ProjectFormProps) {
               className={inputClass}
             />
           </label>
-          <div className="flex flex-col gap-1.5">
-            <span className={labelClass}>
-              Nome da Embarcação (selecione um)
-            </span>
-            <input type="hidden" name="vessel_name" value={vesselName} />
-            <div className="flex max-h-40 flex-col gap-1 overflow-y-auto rounded-lg border border-border bg-white p-2">
-              {vesselNameOptions.length === 0 ? (
-                <p className="px-1.5 py-1 text-sm text-maua-gray-500">
-                  {ccValue
-                    ? "Nenhuma opção da EAP para este CC."
-                    : "Selecione o CC primeiro."}
-                </p>
-              ) : (
-                vesselNameOptions.map((name) => (
-                  <label
-                    key={name}
-                    className="flex items-center gap-2 rounded px-1.5 py-1 text-sm hover:bg-maua-gray-50"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={vesselName === name}
-                      onChange={() => setVesselName(name)}
-                      className="h-4 w-4 accent-[#F18213]"
-                    />
-                    <span>{name}</span>
-                  </label>
-                ))
-              )}
-            </div>
-          </div>
+          <label className="flex flex-col gap-1.5">
+            <span className={labelClass}>Nome da Embarcação</span>
+            <select
+              name="vessel_name"
+              required
+              value={vesselName}
+              onChange={(e) => setVesselName(e.target.value)}
+              disabled={vesselNameOptions.length === 0}
+              className={inputClass}
+            >
+              <option value="" disabled>
+                {vesselNameOptions.length === 0
+                  ? ccValue
+                    ? "Nenhuma opção da EAP para este CC"
+                    : "Selecione o CC primeiro"
+                  : "Selecione..."}
+              </option>
+              {vesselNameOptions.map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </label>
           <label className="flex flex-col gap-1.5">
             <span className={labelClass}>Data Início</span>
             <input
