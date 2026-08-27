@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { href: "/configuracao", label: "Configuração" },
   { href: "/faturamento", label: "Atualização Faturamento" },
   { href: "/termo-aceite", label: "Cadastro/Atualização Termo de Aceite" },
+  { href: "/cronograma-faturamento", label: "Cronograma de Faturamento" },
 ];
 
 export function MainNav() {
