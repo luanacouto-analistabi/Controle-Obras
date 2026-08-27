@@ -35,10 +35,23 @@ export function getErrorMessage(err: unknown, fallback: string): string {
 }
 
 /**
+ * Deduplica linhas da EAP por cod_os, mantendo a de maior data_inicio —
+ * a mesma OS pode aparecer mais de uma vez (fases/períodos diferentes).
+ */
+export function dedupeEapByOs(eapRows: EapRecord[]): EapRecord[] {
+  const byOs = new Map<string, EapRecord>();
+  for (const row of eapRows) {
+    const existing = byOs.get(row.cod_os);
+    if (!existing || (row.data_inicio ?? "") > (existing.data_inicio ?? "")) {
+      byOs.set(row.cod_os, row);
+    }
+  }
+  return [...byOs.values()].sort((a, b) => a.cod_os.localeCompare(b.cod_os));
+}
+
+/**
  * OS (EAP) concluídas até a Data da Invoice de um evento de pagamento:
- * data_fim <= invoiceDate. Quando o mesmo cod_os aparece mais de uma vez
- * (fases/períodos diferentes), fica só a ocorrência de maior data_inicio
- * entre as elegíveis — evita listar a mesma OS duplicada.
+ * data_fim <= invoiceDate, deduplicadas por cod_os (ver dedupeEapByOs).
  */
 export function filterOsByInvoiceDate(
   eapRows: EapRecord[],
@@ -47,14 +60,5 @@ export function filterOsByInvoiceDate(
   const eligible = eapRows.filter(
     (row) => row.data_fim !== null && row.data_fim <= invoiceDate
   );
-
-  const byOs = new Map<string, EapRecord>();
-  for (const row of eligible) {
-    const existing = byOs.get(row.cod_os);
-    if (!existing || (row.data_inicio ?? "") > (existing.data_inicio ?? "")) {
-      byOs.set(row.cod_os, row);
-    }
-  }
-
-  return [...byOs.values()].sort((a, b) => a.cod_os.localeCompare(b.cod_os));
+  return dedupeEapByOs(eligible);
 }

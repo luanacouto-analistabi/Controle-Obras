@@ -99,6 +99,19 @@ export type ProjectChangeHistory = {
   document_id: string | null;
 };
 
+export type OsAcceptanceTerm = {
+  id: string;
+  project_id: string;
+  cod_os: string;
+  signed_at: string | null;
+  file_name: string | null;
+  storage_path: string | null;
+  uploaded_by: string | null;
+  uploaded_at: string | null;
+  updated_at: string;
+  updated_by: string | null;
+};
+
 export type ProjectFinancialSummary = {
   project_id: string;
   approved_amount: number;
@@ -128,6 +141,7 @@ export type Database = {
       billing_events: Table<BillingEvent>;
       project_documents: Table<ProjectDocument>;
       project_change_history: Table<ProjectChangeHistory>;
+      os_acceptance_terms: Table<OsAcceptanceTerm>;
     };
     Views: {
       project_financial_summary: View<ProjectFinancialSummary>;
