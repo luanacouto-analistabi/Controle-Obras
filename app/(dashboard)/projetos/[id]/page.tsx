@@ -47,7 +47,7 @@ export default async function ProjectDetailPage({
 
       <p className="text-sm text-maua-gray-500">
         Clique num evento de pagamento para ver as OS da EAP concluídas até a
-        Data da Invoice.
+        Data Prevista de Pagamento.
       </p>
 
       <PaymentEventsTable

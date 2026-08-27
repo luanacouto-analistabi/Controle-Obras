@@ -50,15 +50,16 @@ export function dedupeEapByOs(eapRows: EapRecord[]): EapRecord[] {
 }
 
 /**
- * OS (EAP) concluídas até a Data da Invoice de um evento de pagamento:
- * data_fim <= invoiceDate, deduplicadas por cod_os (ver dedupeEapByOs).
+ * OS (EAP) concluídas até uma data de referência (a Data Prevista de
+ * Pagamento de um evento de pagamento): data_fim <= referenceDate,
+ * deduplicadas por cod_os (ver dedupeEapByOs).
  */
-export function filterOsByInvoiceDate(
+export function filterOsCompletedBy(
   eapRows: EapRecord[],
-  invoiceDate: string
+  referenceDate: string
 ): EapRecord[] {
   const eligible = eapRows.filter(
-    (row) => row.data_fim !== null && row.data_fim <= invoiceDate
+    (row) => row.data_fim !== null && row.data_fim <= referenceDate
   );
   return dedupeEapByOs(eligible);
 }

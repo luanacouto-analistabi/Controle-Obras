@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useState } from "react";
-import { filterOsByInvoiceDate, formatCurrencyBRL } from "@/lib/utils";
+import { filterOsCompletedBy, formatCurrencyBRL } from "@/lib/utils";
 import type { PaymentEvent } from "@/types/database.types";
 import type { EapRecord } from "@/types/maua-scp.types";
 
@@ -60,8 +60,8 @@ export function PaymentEventsTable({
         <tbody>
           {paymentEvents.map((event) => {
             const isExpanded = expandedId === event.id;
-            const osRows = event.invoice_date
-              ? filterOsByInvoiceDate(eapRows, event.invoice_date)
+            const osRows = event.expected_payment_date
+              ? filterOsCompletedBy(eapRows, event.expected_payment_date)
               : [];
 
             return (
@@ -103,16 +103,17 @@ export function PaymentEventsTable({
                 {isExpanded && (
                   <tr>
                     <td colSpan={8} className="border-b border-border bg-surface p-4">
-                      {!event.invoice_date ? (
+                      {!event.expected_payment_date ? (
                         <p className="text-sm text-maua-gray-500">
-                          Este evento não tem Data de Invoice — não é
-                          possível determinar as OS concluídas até essa
-                          data.
+                          Este evento não tem Data Prevista de Pagamento —
+                          não é possível determinar as OS concluídas até
+                          essa data.
                         </p>
                       ) : osRows.length === 0 ? (
                         <p className="text-sm text-maua-gray-500">
                           Nenhuma OS da EAP concluída até{" "}
-                          {formatDate(event.invoice_date)} para este CC.
+                          {formatDate(event.expected_payment_date)} para
+                          este CC.
                         </p>
                       ) : (
                         <div className="overflow-x-auto rounded-lg border border-border bg-white">

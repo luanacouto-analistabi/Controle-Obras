@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useActionState, useState } from "react";
 import {
   createProjectAction,
@@ -420,17 +419,6 @@ export function ProjectForm(props: ProjectFormProps) {
 
       {isEdit && (
         <>
-          <div className="rounded-xl border border-dashed border-border bg-white p-4 text-sm text-maua-gray-500 shadow-card">
-            Faturamento (Bloco 3) mudou de lugar —{" "}
-            <Link
-              href={`/faturamento/${props.project.id}`}
-              className="font-semibold text-maua-navy hover:underline"
-            >
-              atualize em &ldquo;Atualização Faturamento&rdquo;
-            </Link>
-            .
-          </div>
-
           <section className="rounded-xl border border-[#F18213]/40 bg-[#F18213]/5 p-6 shadow-card">
             <h2 className="mb-1 text-base font-bold text-maua-navy">
               Confirmar alteração
