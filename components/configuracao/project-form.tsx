@@ -55,11 +55,24 @@ function paymentRowFromEvent(event: PaymentEvent): PaymentRowState {
   };
 }
 
+const PROJECT_COORDINATORS = [
+  "Janderson Santos",
+  "Alexandre Trindade",
+  "Bruno Cabral",
+  "Bruno Contildes",
+  "Wallace Guinim",
+  "Uriel Rodrigues",
+  "Carlos Macedo",
+];
+
 const inputClass =
   "h-10 rounded-lg border border-border bg-white px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-accent/50 focus-visible:border-accent w-full";
 const labelClass = "text-sm font-medium text-maua-navy";
 
-type ProjectFormProps = { centrosCusto: CentroCusto[] } & (
+type ProjectFormProps = {
+  centrosCusto: CentroCusto[];
+  vesselNamesByCc: Record<string, string[]>;
+} & (
   | { mode: "create" }
   | {
       mode: "edit";
@@ -83,6 +96,7 @@ export function ProjectForm(props: ProjectFormProps) {
   );
 
   const currentCc = isEdit ? props.project.cc : "";
+  const [ccValue, setCcValue] = useState(currentCc);
   const ccOptions =
     currentCc && !props.centrosCusto.some((c) => c.codCcusto === currentCc)
       ? [
@@ -90,6 +104,22 @@ export function ProjectForm(props: ProjectFormProps) {
           ...props.centrosCusto,
         ]
       : props.centrosCusto;
+
+  const [coordinator, setCoordinator] = useState(
+    isEdit ? props.project.project_coordinator : ""
+  );
+  const coordinatorOptions =
+    coordinator && !PROJECT_COORDINATORS.includes(coordinator)
+      ? [coordinator, ...PROJECT_COORDINATORS]
+      : PROJECT_COORDINATORS;
+
+  const currentVesselName = isEdit ? props.project.vessel_name : "";
+  const [vesselName, setVesselName] = useState(currentVesselName);
+  const vesselNamesForCc = props.vesselNamesByCc[ccValue] ?? [];
+  const vesselNameOptions =
+    vesselName && !vesselNamesForCc.includes(vesselName)
+      ? [vesselName, ...vesselNamesForCc]
+      : vesselNamesForCc;
 
   function updatePaymentRow(
     key: string,
@@ -130,7 +160,8 @@ export function ProjectForm(props: ProjectFormProps) {
             <select
               name="cc"
               required
-              defaultValue={currentCc}
+              value={ccValue}
+              onChange={(e) => setCcValue(e.target.value)}
               disabled={ccOptions.length === 0}
               className={inputClass}
             >
@@ -146,15 +177,28 @@ export function ProjectForm(props: ProjectFormProps) {
               ))}
             </select>
           </label>
-          <label className="flex flex-col gap-1.5">
-            <span className={labelClass}>Coordenador de Projeto</span>
-            <input
-              name="project_coordinator"
-              required
-              defaultValue={isEdit ? props.project.project_coordinator : ""}
-              className={inputClass}
-            />
-          </label>
+          <div className="flex flex-col gap-1.5">
+            <span className={labelClass}>
+              Coordenador de Projeto (selecione um)
+            </span>
+            <input type="hidden" name="project_coordinator" value={coordinator} />
+            <div className="flex max-h-40 flex-col gap-1 overflow-y-auto rounded-lg border border-border bg-white p-2">
+              {coordinatorOptions.map((name) => (
+                <label
+                  key={name}
+                  className="flex items-center gap-2 rounded px-1.5 py-1 text-sm hover:bg-maua-gray-50"
+                >
+                  <input
+                    type="checkbox"
+                    checked={coordinator === name}
+                    onChange={() => setCoordinator(name)}
+                    className="h-4 w-4 accent-[#F18213]"
+                  />
+                  <span>{name}</span>
+                </label>
+              ))}
+            </div>
+          </div>
           <label className="flex flex-col gap-1.5">
             <span className={labelClass}>Cliente</span>
             <input
@@ -164,15 +208,36 @@ export function ProjectForm(props: ProjectFormProps) {
               className={inputClass}
             />
           </label>
-          <label className="flex flex-col gap-1.5">
-            <span className={labelClass}>Nome da Embarcação</span>
-            <input
-              name="vessel_name"
-              required
-              defaultValue={isEdit ? props.project.vessel_name : ""}
-              className={inputClass}
-            />
-          </label>
+          <div className="flex flex-col gap-1.5">
+            <span className={labelClass}>
+              Nome da Embarcação (selecione um)
+            </span>
+            <input type="hidden" name="vessel_name" value={vesselName} />
+            <div className="flex max-h-40 flex-col gap-1 overflow-y-auto rounded-lg border border-border bg-white p-2">
+              {vesselNameOptions.length === 0 ? (
+                <p className="px-1.5 py-1 text-sm text-maua-gray-500">
+                  {ccValue
+                    ? "Nenhuma opção da EAP para este CC."
+                    : "Selecione o CC primeiro."}
+                </p>
+              ) : (
+                vesselNameOptions.map((name) => (
+                  <label
+                    key={name}
+                    className="flex items-center gap-2 rounded px-1.5 py-1 text-sm hover:bg-maua-gray-50"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={vesselName === name}
+                      onChange={() => setVesselName(name)}
+                      className="h-4 w-4 accent-[#F18213]"
+                    />
+                    <span>{name}</span>
+                  </label>
+                ))
+              )}
+            </div>
+          </div>
           <label className="flex flex-col gap-1.5">
             <span className={labelClass}>Data Início</span>
             <input

@@ -1,9 +1,12 @@
 import Link from "next/link";
 import { ProjectForm } from "@/components/configuracao/project-form";
-import { listCentrosCusto } from "@/lib/services/maua-scp";
+import { listCentrosCusto, listVesselNamesByCc } from "@/lib/services/maua-scp";
 
 export default async function NovoProjetoPage() {
-  const centrosCusto = await listCentrosCusto().catch(() => []);
+  const [centrosCusto, vesselNamesByCc] = await Promise.all([
+    listCentrosCusto().catch(() => []),
+    listVesselNamesByCc().catch(() => ({})),
+  ]);
 
   return (
     <div className="mx-auto flex max-w-[1100px] flex-col gap-5">
@@ -19,7 +22,11 @@ export default async function NovoProjetoPage() {
           Preencha os três blocos abaixo para cadastrar o projeto.
         </p>
       </div>
-      <ProjectForm mode="create" centrosCusto={centrosCusto} />
+      <ProjectForm
+        mode="create"
+        centrosCusto={centrosCusto}
+        vesselNamesByCc={vesselNamesByCc}
+      />
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { getProjectForEdit } from "@/lib/services/projects";
 import { getCurrentUser } from "@/lib/supabase/dal";
 import { ProjectForm } from "@/components/configuracao/project-form";
 import { formatCurrencyBRL } from "@/lib/utils";
-import { listCentrosCusto } from "@/lib/services/maua-scp";
+import { listCentrosCusto, listVesselNamesByCc } from "@/lib/services/maua-scp";
 
 function formatDateTime(iso: string) {
   return new Intl.DateTimeFormat("pt-BR", {
@@ -17,10 +17,11 @@ export default async function EditarProjetoPage({
   params,
 }: PageProps<"/configuracao/[id]">) {
   const { id } = await params;
-  const [data, user, centrosCusto] = await Promise.all([
+  const [data, user, centrosCusto, vesselNamesByCc] = await Promise.all([
     getProjectForEdit(id),
     getCurrentUser(),
     listCentrosCusto().catch(() => []),
+    listVesselNamesByCc().catch(() => ({})),
   ]);
 
   if (!data) {
@@ -69,6 +70,7 @@ export default async function EditarProjetoPage({
           project={project}
           paymentEvents={paymentEvents}
           centrosCusto={centrosCusto}
+          vesselNamesByCc={vesselNamesByCc}
         />
       ) : (
         <div className="rounded-xl border border-dashed border-border bg-white p-6 text-sm text-maua-gray-500 shadow-card">
