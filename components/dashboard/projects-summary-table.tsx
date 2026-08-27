@@ -54,69 +54,69 @@ export function ProjectsSummaryTable({ rows }: { rows: ProjectSummaryRow[] }) {
 
   return (
     <div className="overflow-x-auto rounded-xl border border-border bg-white shadow-card">
-      <table className="w-full min-w-[960px] border-collapse text-sm">
+      <table className="w-full min-w-[960px] border-collapse text-base">
         <thead>
           <tr>
             <th
               rowSpan={2}
-              className="border-b border-border bg-maua-navy/20 px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-maua-navy/70"
+              className="border-b border-border bg-maua-navy px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-white"
             >
               CC
             </th>
             <th
               rowSpan={2}
-              className="border-b border-border bg-maua-navy/20 px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-maua-navy/70"
+              className="border-b border-border bg-maua-navy px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-white"
             >
               Cliente
             </th>
             <th
               rowSpan={2}
-              className="border-b border-border bg-maua-navy/20 px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-maua-navy/70"
+              className="border-b border-border bg-maua-navy px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-white"
             >
               Obra
             </th>
             <th
               colSpan={3}
-              className="border-b border-l border-border bg-maua-navy/20 px-3 py-1.5 text-center text-[10px] font-bold uppercase tracking-wider text-maua-navy/70"
+              className="border-b border-l border-border bg-maua-navy px-3 py-1.5 text-center text-[10px] font-bold uppercase tracking-wider text-white"
             >
               Medição
             </th>
             <th
               colSpan={2}
-              className="border-b border-l border-border bg-maua-navy/20 px-3 py-1.5 text-center text-[10px] font-bold uppercase tracking-wider text-maua-navy/70"
+              className="border-b border-l border-border bg-maua-navy px-3 py-1.5 text-center text-[10px] font-bold uppercase tracking-wider text-white"
             >
               Emissão PO
             </th>
             <th
               colSpan={3}
-              className="border-b border-l border-border bg-maua-navy/20 px-3 py-1.5 text-center text-[10px] font-bold uppercase tracking-wider text-maua-navy/70"
+              className="border-b border-l border-border bg-maua-navy px-3 py-1.5 text-center text-[10px] font-bold uppercase tracking-wider text-white"
             >
               Aprovada
             </th>
           </tr>
           <tr>
-            <th className="border-b border-l border-border bg-maua-navy/10 px-3 py-1.5 text-right text-[10px] font-bold uppercase tracking-wider text-maua-navy/70">
+            <th className="border-b border-l border-border bg-maua-navy px-3 py-1.5 text-right text-[10px] font-bold uppercase tracking-wider text-white/85">
               Aprovada
             </th>
-            <th className="border-b border-border bg-maua-navy/10 px-3 py-1.5 text-right text-[10px] font-bold uppercase tracking-wider text-maua-navy/70">
+            <th className="border-b border-border bg-maua-navy px-3 py-1.5 text-right text-[10px] font-bold uppercase tracking-wider text-white/85">
               Em discussão
             </th>
-            <th className="border-b border-border bg-maua-navy/10 px-3 py-1.5 text-right text-[10px] font-bold uppercase tracking-wider text-maua-navy/70">
+            <th className="border-b border-border bg-maua-navy px-3 py-1.5 text-right text-[10px] font-bold uppercase tracking-wider text-white/85">
               Prevista
             </th>
-            <th className="border-b border-l border-border bg-maua-navy/10 px-3 py-1.5 text-right text-[10px] font-bold uppercase tracking-wider text-maua-navy/70">
+            <th className="border-b border-l border-border bg-maua-navy px-3 py-1.5 text-right text-[10px] font-bold uppercase tracking-wider text-white/85">
               PO não emitida
             </th>
-            <th className="border-b border-border bg-maua-navy/10 px-3 py-1.5 text-right text-[10px] font-bold uppercase tracking-wider text-maua-navy/70">
+            <th className="border-b border-border bg-maua-navy px-3 py-1.5 text-right text-[10px] font-bold uppercase tracking-wider text-white/85">
               PO sem saldo
             </th>
-            <th className="border-b border-l border-border bg-maua-navy/10 px-3 py-1.5 text-right text-[10px] font-bold uppercase tracking-wider text-maua-navy/70">
+            <th className="border-b border-l border-border bg-maua-navy px-3 py-1.5 text-right text-[10px] font-bold uppercase tracking-wider text-white/85">
               Pago
             </th>
-            <th className="border-b border-border bg-maua-navy/10 px-3 py-1.5 text-right text-[10px] font-bold uppercase tracking-wider text-maua-navy/70">
+            <th className="border-b border-border bg-maua-navy px-3 py-1.5 text-right text-[10px] font-bold uppercase tracking-wider text-white/85">
               A vencer
             </th>
-            <th className="border-b border-border bg-maua-navy/10 px-3 py-1.5 text-right text-[10px] font-bold uppercase tracking-wider text-maua-navy/70">
+            <th className="border-b border-border bg-maua-navy px-3 py-1.5 text-right text-[10px] font-bold uppercase tracking-wider text-white/85">
               Vencido
             </th>
           </tr>

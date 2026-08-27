@@ -3,11 +3,13 @@ import { formatCurrencyBRL } from "@/lib/utils";
 type Totals = {
   projectCount: number;
   approved: number;
+  inDiscussion: number;
   forecast: number;
+  poNotIssued: number;
+  poNoBalance: number;
   paid: number;
   upcoming: number;
   overdue: number;
-  inDiscussion: number;
 };
 
 const CARDS: Array<{
@@ -16,11 +18,13 @@ const CARDS: Array<{
   tone: "neutral" | "ok" | "warn" | "risk";
 }> = [
   { key: "approved", label: "Aprovado", tone: "ok" },
+  { key: "inDiscussion", label: "Em discussão", tone: "neutral" },
   { key: "forecast", label: "Previsto", tone: "neutral" },
+  { key: "poNotIssued", label: "PO não emitida", tone: "warn" },
+  { key: "poNoBalance", label: "PO sem saldo", tone: "warn" },
   { key: "paid", label: "Pago", tone: "ok" },
   { key: "upcoming", label: "A vencer", tone: "warn" },
   { key: "overdue", label: "Vencido", tone: "risk" },
-  { key: "inDiscussion", label: "Em discussão", tone: "neutral" },
 ];
 
 const TONE_CLASS: Record<(typeof CARDS)[number]["tone"], string> = {
@@ -32,7 +36,7 @@ const TONE_CLASS: Record<(typeof CARDS)[number]["tone"], string> = {
 
 export function KpiCards({ totals }: { totals: Totals }) {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-9">
       <div className="rounded-xl border border-border bg-white p-4 shadow-card">
         <p className="text-[10px] font-bold uppercase tracking-wider text-maua-navy/70">
           Projetos

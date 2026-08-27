@@ -1,0 +1,106 @@
+"use server";
+
+import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+import { ProjectFormSchema } from "@/lib/validators/project";
+import { createProject, updateProject } from "@/lib/services/project-mutations";
+import { getCurrentUser } from "@/lib/supabase/dal";
+
+export type ProjectFormState = { error?: string } | undefined;
+
+function parseFormPayload(formData: FormData) {
+  const general = {
+    cc: String(formData.get("cc") ?? ""),
+    project_coordinator: String(formData.get("project_coordinator") ?? ""),
+    start_date: String(formData.get("start_date") ?? ""),
+    end_date: String(formData.get("end_date") ?? ""),
+    vessel_name: String(formData.get("vessel_name") ?? ""),
+    client: String(formData.get("client") ?? ""),
+  };
+
+  let paymentEvents: unknown = [];
+  let billingEvents: unknown = [];
+  try {
+    paymentEvents = JSON.parse(String(formData.get("paymentEvents") ?? "[]"));
+    billingEvents = JSON.parse(String(formData.get("billingEvents") ?? "[]"));
+  } catch {
+    // deixa o zod rejeitar o formato inválido abaixo
+  }
+
+  return { general, paymentEvents, billingEvents };
+}
+
+export async function createProjectAction(
+  _state: ProjectFormState,
+  formData: FormData
+): Promise<ProjectFormState> {
+  const user = await getCurrentUser();
+  if (user.role === "visualizador") {
+    return { error: "Você não tem permissão para criar projetos." };
+  }
+
+  const parsed = ProjectFormSchema.safeParse(parseFormPayload(formData));
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
+  }
+
+  let projectId: string;
+  try {
+    const project = await createProject(parsed.data, user.id);
+    projectId = project.id;
+  } catch (err) {
+    return {
+      error: err instanceof Error ? err.message : "Erro ao criar projeto.",
+    };
+  }
+
+  revalidatePath("/configuracao");
+  revalidatePath("/");
+  redirect(`/configuracao/${projectId}`);
+}
+
+export async function updateProjectAction(
+  projectId: string,
+  _state: ProjectFormState,
+  formData: FormData
+): Promise<ProjectFormState> {
+  const user = await getCurrentUser();
+  if (user.role === "visualizador") {
+    return { error: "Você não tem permissão para editar projetos." };
+  }
+
+  const reason = String(formData.get("change_reason") ?? "").trim();
+  const document = formData.get("document");
+
+  if (!reason) {
+    return { error: "Informe o motivo da alteração/postergação." };
+  }
+  if (!(document instanceof File) || document.size === 0) {
+    return { error: "Anexe o cronograma atualizado (PDF)." };
+  }
+  if (document.type !== "application/pdf") {
+    return { error: "O cronograma deve ser um arquivo PDF." };
+  }
+
+  const parsed = ProjectFormSchema.safeParse(parseFormPayload(formData));
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
+  }
+
+  try {
+    await updateProject(projectId, parsed.data, {
+      reason,
+      documentFile: document,
+      userId: user.id,
+    });
+  } catch (err) {
+    return {
+      error: err instanceof Error ? err.message : "Erro ao salvar alteração.",
+    };
+  }
+
+  revalidatePath(`/configuracao/${projectId}`);
+  revalidatePath("/configuracao");
+  revalidatePath("/");
+  redirect(`/configuracao/${projectId}`);
+}

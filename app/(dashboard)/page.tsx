@@ -11,21 +11,25 @@ export default async function DashboardPage() {
       return {
         projectCount: acc.projectCount + 1,
         approved: acc.approved + (s?.approved_amount ?? 0),
+        inDiscussion: acc.inDiscussion + (s?.in_discussion_amount ?? 0),
         forecast: acc.forecast + (s?.forecast_amount ?? 0),
+        poNotIssued: acc.poNotIssued + (s?.po_not_issued_amount ?? 0),
+        poNoBalance: acc.poNoBalance + (s?.po_no_balance_amount ?? 0),
         paid: acc.paid + (s?.paid_amount ?? 0),
         upcoming: acc.upcoming + (s?.upcoming_amount ?? 0),
         overdue: acc.overdue + (s?.overdue_amount ?? 0),
-        inDiscussion: acc.inDiscussion + (s?.in_discussion_amount ?? 0),
       };
     },
     {
       projectCount: 0,
       approved: 0,
+      inDiscussion: 0,
       forecast: 0,
+      poNotIssued: 0,
+      poNoBalance: 0,
       paid: 0,
       upcoming: 0,
       overdue: 0,
-      inDiscussion: 0,
     }
   );
 
