@@ -296,7 +296,14 @@ export async function updateProject(
       .from("payment_events")
       .delete()
       .in("id", paymentIdsToDelete);
-    if (error) throw error;
+    if (error) {
+      if (error.code === "23503") {
+        throw new Error(
+          "Não é possível remover um evento de pagamento que já tem faturamento lançado. Remova o faturamento em Atualização Faturamento primeiro."
+        );
+      }
+      throw error;
+    }
   }
   for (const event of input.paymentEvents) {
     const row = toPaymentEventRow(event, projectId);
