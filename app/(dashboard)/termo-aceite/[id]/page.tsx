@@ -59,7 +59,7 @@ export default async function TermoAceiteProjetoPage({
 
       <div>
         <h1 className="text-2xl font-bold text-maua-navy">
-          Cadastro/Atualização Termo de Aceite
+          Atualização Termo de Aceite
         </h1>
         <p className="text-base text-maua-gray-500">
           Uma OS por vez: informe a data de assinatura e/ou anexe o PDF.

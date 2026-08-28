@@ -8,7 +8,7 @@ export default async function TermoAceitePage() {
     <div className="mx-auto flex max-w-[1000px] flex-col gap-5">
       <div>
         <h1 className="text-2xl font-bold text-maua-navy">
-          Cadastro/Atualização Termo de Aceite
+          Atualização Termo de Aceite
         </h1>
         <p className="text-base text-maua-gray-500">
           Escolha um projeto para lançar a assinatura e o anexo do termo de

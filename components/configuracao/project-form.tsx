@@ -49,6 +49,12 @@ const MEASUREMENT_STATUS_OPTIONS: Array<{
   { value: "prevista", label: "Prevista" },
 ];
 
+const PAYMENT_EVENT_OPTIONS = [
+  "Parcela Contratual",
+  "VOR - 50%",
+  "VOR - 100%",
+];
+
 function newPaymentRow(): PaymentRowState {
   return {
     key: crypto.randomUUID(),
@@ -326,7 +332,7 @@ export function ProjectForm(props: ProjectFormProps) {
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 <label className="flex flex-col gap-1.5">
                   <span className={labelClass}>Evento de pagamento</span>
-                  <input
+                  <select
                     required
                     value={row.payment_event}
                     onChange={(e) =>
@@ -335,7 +341,20 @@ export function ProjectForm(props: ProjectFormProps) {
                       })
                     }
                     className={inputClass}
-                  />
+                  >
+                    <option value="" disabled>
+                      Selecione...
+                    </option>
+                    {(row.payment_event &&
+                    !PAYMENT_EVENT_OPTIONS.includes(row.payment_event)
+                      ? [row.payment_event, ...PAYMENT_EVENT_OPTIONS]
+                      : PAYMENT_EVENT_OPTIONS
+                    ).map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
                 </label>
                 <label className="flex flex-col gap-1.5">
                   <span className={labelClass}>Descrição da Invoice</span>

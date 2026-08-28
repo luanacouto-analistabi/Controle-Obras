@@ -7,8 +7,7 @@ import { cn } from "@/lib/utils";
 const NAV_ITEMS = [
   { href: "/", label: "Consolidado" },
   { href: "/configuracao", label: "Configuração" },
-  { href: "/faturamento", label: "Atualização Faturamento" },
-  { href: "/termo-aceite", label: "Cadastro/Atualização Termo de Aceite" },
+  { href: "/termo-aceite", label: "Atualização Termo de Aceite" },
   { href: "/cronograma-faturamento", label: "Cronograma de Faturamento" },
 ];
 

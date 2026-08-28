@@ -57,7 +57,6 @@ export default async function ConfiguracaoPage() {
                   "Cliente",
                   "Obra",
                   "Última alteração",
-                  "",
                 ].map((label) => (
                   <th
                     key={label}
@@ -99,14 +98,6 @@ export default async function ConfiguracaoPage() {
                         Sem alterações
                       </span>
                     )}
-                  </td>
-                  <td className="border-b border-border px-3 py-2 text-right">
-                    <Link
-                      href={`/faturamento/${row.id}`}
-                      className="text-sm font-semibold text-maua-navy hover:underline"
-                    >
-                      Faturamento
-                    </Link>
                   </td>
                 </tr>
               ))}

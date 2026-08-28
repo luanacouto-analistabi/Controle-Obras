@@ -216,7 +216,7 @@ export async function createProject(input: ProjectFormInput, userId: string) {
  * quando houver.
  *
  * Faturamento (Bloco 3) não passa mais por aqui — tem seu próprio fluxo em
- * updateBillingEvents(), sem exigir PDF/motivo (ver "Atualização Faturamento").
+ * updateBillingEvents(), sem exigir PDF/motivo (mesma tela de Configuração).
  *
  * Sem transação de banco (supabase-js não expõe uma pela REST API) — os
  * passos rodam em sequência. Risco aceito por ora; revisitar com uma
@@ -306,7 +306,7 @@ export async function updateProject(
     if (error) {
       if (error.code === "23503") {
         throw new Error(
-          "Não é possível remover um evento de pagamento que já tem faturamento lançado. Remova o faturamento em Atualização Faturamento primeiro."
+          "Não é possível remover um evento de pagamento que já tem faturamento lançado. Remova o faturamento no bloco 3 desta mesma tela primeiro."
         );
       }
       throw error;
@@ -339,11 +339,11 @@ export async function updateProject(
 }
 
 /**
- * Salva o Bloco 3 (Faturamento) na tela "Atualização Faturamento". Sem
- * PDF/motivo — não é uma mudança de cronograma, é uma atualização
- * operacional de faturamento. Ainda registra o diff em
- * project_change_history (sem documento/motivo associado) para manter
- * rastreabilidade de quem mudou o quê e quando.
+ * Salva o Bloco 3 (Faturamento) na tela de Configuração. Sem PDF/motivo —
+ * não é uma mudança de cronograma, é uma atualização operacional de
+ * faturamento. Ainda registra o diff em project_change_history (sem
+ * documento/motivo associado) para manter rastreabilidade de quem mudou
+ * o quê e quando.
  */
 export async function updateBillingEvents(
   projectId: string,
