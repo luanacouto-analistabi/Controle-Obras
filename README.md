@@ -1,3 +1,15 @@
+# Controle de Obras — Estaleiro Mauá
+
+Sistema de Controle de Projetos, Pagamentos e Faturamento.
+
+- 📄 [Documentação da aplicação](./DOCUMENTACAO.md) — arquitetura, modelo de
+  dados e regras de negócio.
+- 📘 [Guia de uso](./GUIA_DO_USUARIO.md) — como usar cada tela do sistema.
+- ⚙️ [Setup do ambiente](./SETUP.md)
+- 🎨 [Design system](./DESIGN_SYSTEM.md)
+
+---
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
