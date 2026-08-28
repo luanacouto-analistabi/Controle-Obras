@@ -120,7 +120,8 @@ export function BillingForm({
         billed_amount: paymentEventById.get(paymentEventId)?.amount ?? 0,
         invoice_number: row.invoice_number || null,
         invoice_date: row.invoice_date || null,
-        new_billing_date: row.new_billing_date || null,
+        new_billing_date:
+          row.status === "nao_pago" ? row.new_billing_date || null : null,
         status: row.status,
         paid_date: row.status === "pago" ? row.paid_date || null : null,
       }))
@@ -347,19 +348,6 @@ export function BillingForm({
                 />
               </label>
               <label className="flex flex-col gap-1.5">
-                <span className={labelClass}>Nova Data de Faturamento</span>
-                <input
-                  type="date"
-                  value={editingRow.new_billing_date}
-                  onChange={(e) =>
-                    updateRow(editingRow.key, {
-                      new_billing_date: e.target.value,
-                    })
-                  }
-                  className={inputClass}
-                />
-              </label>
-              <label className="flex flex-col gap-1.5">
                 <span className={labelClass}>Status</span>
                 <select
                   value={editingRow.status}
@@ -382,6 +370,21 @@ export function BillingForm({
                     value={editingRow.paid_date}
                     onChange={(e) =>
                       updateRow(editingRow.key, { paid_date: e.target.value })
+                    }
+                    className={inputClass}
+                  />
+                </label>
+              )}
+              {editingRow.status === "nao_pago" && (
+                <label className="flex flex-col gap-1.5">
+                  <span className={labelClass}>Nova Data de Faturamento</span>
+                  <input
+                    type="date"
+                    value={editingRow.new_billing_date}
+                    onChange={(e) =>
+                      updateRow(editingRow.key, {
+                        new_billing_date: e.target.value,
+                      })
                     }
                     className={inputClass}
                   />
