@@ -75,20 +75,59 @@ export function formatMonthLabel(year: number, month: number) {
   return `${MONTH_ABBR[month - 1]}.${String(year).slice(2)}`;
 }
 
+export type BillingCellStatus = "pago" | "previsto" | "vencido" | null;
+
 export type BillingScheduleRow = {
   key: string;
   cc: string;
   category: "ESCOPO" | "VOR";
   vesselName: string;
   weekAmounts: number[];
+  weekStatuses: BillingCellStatus[];
   total: number;
+  totalStatus: BillingCellStatus;
 };
+
+/**
+ * Prioridade quando uma célula soma eventos em estados diferentes: um
+ * vencido chama mais atenção que um previsto, que por sua vez chama mais
+ * atenção que um já pago — só fica totalmente "pago" (verde) se todos os
+ * eventos daquela célula estiverem pagos.
+ */
+const STATUS_PRIORITY: Record<Exclude<BillingCellStatus, null>, number> = {
+  vencido: 3,
+  previsto: 2,
+  pago: 1,
+};
+
+function combineStatus(
+  current: BillingCellStatus,
+  next: BillingCellStatus
+): BillingCellStatus {
+  if (!current) return next;
+  if (!next) return current;
+  return STATUS_PRIORITY[next] > STATUS_PRIORITY[current] ? next : current;
+}
+
+function classifyEvent(
+  paidDate: string | null,
+  expectedPaymentDate: string
+): Exclude<BillingCellStatus, null> {
+  if (paidDate) return "pago";
+  const todayIso = toISODate(new Date());
+  return expectedPaymentDate < todayIso ? "vencido" : "previsto";
+}
 
 /**
  * Previsão de faturamento semanal: soma o `amount` dos payment_events por
  * Data Prevista de Pagamento, agrupado por projeto e por categoria
  * (ESCOPO/VOR — VOR quando o nome do evento contém "vor", senão ESCOPO).
  * Só entram linhas com total > 0 no mês.
+ *
+ * Cada célula também carrega um status (pago/previsto/vencido) usado para
+ * colorir o fundo — pago quando paid_date está preenchido, vencido quando
+ * a Data Prevista de Pagamento já passou e ainda não foi pago, previsto
+ * caso contrário.
  */
 export async function getBillingSchedule(
   year: number,
@@ -104,7 +143,7 @@ export async function getBillingSchedule(
       supabase.from("projects").select("id, cc, vessel_name"),
       supabase
         .from("payment_events")
-        .select("project_id, payment_event, amount, expected_payment_date")
+        .select("project_id, payment_event, amount, expected_payment_date, paid_date")
         .gte("expected_payment_date", monthStart)
         .lte("expected_payment_date", monthEnd),
     ]);
@@ -133,7 +172,9 @@ export async function getBillingSchedule(
         category,
         vesselName: project.vessel_name,
         weekAmounts: buckets.map(() => 0),
+        weekStatuses: buckets.map(() => null),
         total: 0,
+        totalStatus: null,
       };
       groups.set(key, row);
     }
@@ -143,8 +184,14 @@ export async function getBillingSchedule(
     );
     if (bucketIndex === -1) continue;
 
+    const status = classifyEvent(event.paid_date, event.expected_payment_date);
     row.weekAmounts[bucketIndex] += event.amount;
+    row.weekStatuses[bucketIndex] = combineStatus(
+      row.weekStatuses[bucketIndex],
+      status
+    );
     row.total += event.amount;
+    row.totalStatus = combineStatus(row.totalStatus, status);
   }
 
   const rows = [...groups.values()]

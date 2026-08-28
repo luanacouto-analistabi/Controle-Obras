@@ -2,12 +2,29 @@ import Link from "next/link";
 import {
   getBillingSchedule,
   formatMonthLabel,
+  type BillingCellStatus,
 } from "@/lib/services/billing-schedule";
 import { formatCurrencyBRL } from "@/lib/utils";
 
 function currentYearMonth() {
   const now = new Date();
   return { year: now.getFullYear(), month: now.getMonth() + 1 };
+}
+
+const STATUS_BG: Record<Exclude<BillingCellStatus, null>, string> = {
+  pago: "bg-[#9AD595]/40",
+  previsto: "bg-[#F9E79F]/50",
+  vencido: "bg-[#DFA1AA]/40",
+};
+
+function combineStatus(
+  current: BillingCellStatus,
+  next: BillingCellStatus
+): BillingCellStatus {
+  const priority = { vencido: 3, previsto: 2, pago: 1 } as const;
+  if (!current) return next;
+  if (!next) return current;
+  return priority[next] > priority[current] ? next : current;
 }
 
 export default async function CronogramaFaturamentoPage({
@@ -29,6 +46,16 @@ export default async function CronogramaFaturamentoPage({
   const bucketTotals = buckets.map((_, i) =>
     rows.reduce((sum, r) => sum + r.weekAmounts[i], 0)
   );
+  const bucketStatuses = buckets.map((_, i) =>
+    rows.reduce<BillingCellStatus>(
+      (status, r) => combineStatus(status, r.weekStatuses[i]),
+      null
+    )
+  );
+  const grandTotalStatus = rows.reduce<BillingCellStatus>(
+    (status, r) => combineStatus(status, r.totalStatus),
+    null
+  );
 
   const navButtonClass =
     "flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-white text-maua-navy hover:bg-maua-gray-100";
@@ -44,6 +71,17 @@ export default async function CronogramaFaturamentoPage({
             Soma da Data Prevista de Pagamento dos eventos de pagamento,
             semana a semana.
           </p>
+          <div className="mt-2 flex flex-wrap items-center gap-4 text-xs text-maua-gray-500">
+            <span className="flex items-center gap-1.5">
+              <span className="h-3 w-3 rounded-sm bg-[#9AD595]" /> Pago
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-3 w-3 rounded-sm bg-[#F9E79F]" /> Previsto
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-3 w-3 rounded-sm bg-[#DFA1AA]" /> Vencido
+            </span>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <Link
@@ -95,7 +133,7 @@ export default async function CronogramaFaturamentoPage({
                     {bucket.label}
                   </th>
                 ))}
-                <th className="border-b border-l border-border bg-[#9AD595]/60 px-3 py-2 text-right text-[10px] font-bold uppercase tracking-wider text-[#1B5E37]">
+                <th className="border-b border-l border-border bg-maua-navy px-3 py-2 text-right text-[10px] font-bold uppercase tracking-wider text-white">
                   Total a ser Faturado {formatMonthLabel(year, month)}
                 </th>
               </tr>
@@ -112,7 +150,11 @@ export default async function CronogramaFaturamentoPage({
                   {row.weekAmounts.map((amount, i) => (
                     <td
                       key={buckets[i].label}
-                      className="border-b border-l border-border px-3 py-2 text-right tabular-nums"
+                      className={`border-b border-l border-border px-3 py-2 text-right tabular-nums ${
+                        amount === 0
+                          ? ""
+                          : STATUS_BG[row.weekStatuses[i] ?? "previsto"]
+                      }`}
                     >
                       {amount === 0 ? (
                         <span className="text-maua-gray-400">–</span>
@@ -121,7 +163,11 @@ export default async function CronogramaFaturamentoPage({
                       )}
                     </td>
                   ))}
-                  <td className="border-b border-l border-border bg-[#9AD595]/10 px-3 py-2 text-right font-semibold tabular-nums">
+                  <td
+                    className={`border-b border-l border-border px-3 py-2 text-right font-semibold tabular-nums ${
+                      STATUS_BG[row.totalStatus ?? "previsto"]
+                    }`}
+                  >
                     {formatCurrencyBRL(row.total)}
                   </td>
                 </tr>
@@ -135,12 +181,20 @@ export default async function CronogramaFaturamentoPage({
                 {bucketTotals.map((amount, i) => (
                   <td
                     key={buckets[i].label}
-                    className="border-l border-border px-3 py-2 text-right tabular-nums"
+                    className={`border-l border-border px-3 py-2 text-right tabular-nums ${
+                      amount === 0
+                        ? ""
+                        : STATUS_BG[bucketStatuses[i] ?? "previsto"]
+                    }`}
                   >
                     {amount === 0 ? "–" : formatCurrencyBRL(amount)}
                   </td>
                 ))}
-                <td className="border-l border-border bg-[#9AD595]/20 px-3 py-2 text-right tabular-nums">
+                <td
+                  className={`border-l border-border px-3 py-2 text-right tabular-nums ${
+                    STATUS_BG[grandTotalStatus ?? "previsto"]
+                  }`}
+                >
                   {formatCurrencyBRL(grandTotal)}
                 </td>
               </tr>
