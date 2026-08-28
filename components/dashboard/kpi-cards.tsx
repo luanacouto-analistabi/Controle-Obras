@@ -36,7 +36,7 @@ const TONE_CLASS: Record<(typeof CARDS)[number]["tone"], string> = {
 
 export function KpiCards({ totals }: { totals: Totals }) {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-9">
+    <div className="grid grid-cols-[repeat(auto-fit,minmax(130px,1fr))] gap-3">
       <div className="rounded-xl border border-border bg-white p-4 shadow-card">
         <p className="text-[10px] font-bold uppercase tracking-wider text-maua-navy/70">
           Projetos

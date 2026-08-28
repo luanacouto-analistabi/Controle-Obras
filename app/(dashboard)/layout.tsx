@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { LogOut } from "lucide-react";
 import { getCurrentUser } from "@/lib/supabase/dal";
 import { logout } from "@/lib/actions/auth";
 import { MainNav } from "@/components/layout/main-nav";
@@ -15,31 +16,32 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const user = await getCurrentUser();
+  const initial = user.fullName.trim().charAt(0).toUpperCase() || "?";
 
   return (
     <div className="flex min-h-screen bg-surface">
-      <aside className="flex w-64 flex-shrink-0 flex-col bg-maua-navy px-4 py-5">
-        <div className="flex flex-col items-center gap-3 border-b border-white/10 pb-5">
+      <aside className="flex w-64 flex-shrink-0 flex-col gap-5 bg-maua-navy p-4">
+        <div className="flex items-center justify-center rounded-xl bg-white p-3 shadow-card">
           <Image
             src="/estaleiro-maua-logo.png"
             alt="Estaleiro Mauá"
             width={160}
             height={67}
             priority
-            className="h-12 w-auto"
+            className="h-11 w-auto"
           />
-          <p className="text-center text-sm font-bold leading-tight text-white">
-            Controle Financeiro de Projetos
-          </p>
         </div>
 
-        <div className="mt-5 flex-1">
+        <div className="flex-1">
           <MainNav />
         </div>
 
-        <div className="flex flex-col gap-3 border-t border-white/10 pt-4">
-          <div className="leading-tight">
-            <p className="text-sm font-semibold text-white">
+        <div className="flex items-center gap-3 border-t border-white/10 pt-4">
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#F18213] text-sm font-bold text-white">
+            {initial}
+          </div>
+          <div className="min-w-0 flex-1 leading-tight">
+            <p className="truncate text-sm font-semibold text-white">
               {user.fullName}
             </p>
             <p className="text-xs text-[#94A3B8]">{ROLE_LABEL[user.role]}</p>
@@ -47,15 +49,16 @@ export default async function DashboardLayout({
           <form action={logout}>
             <button
               type="submit"
-              className="h-9 w-full rounded-lg border border-white/15 bg-white/5 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+              aria-label="Sair"
+              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-[#C8D5DC] transition-colors hover:bg-[#2D3F4A] hover:text-white"
             >
-              Sair
+              <LogOut className="h-4 w-4" strokeWidth={1.8} aria-hidden />
             </button>
           </form>
         </div>
       </aside>
 
-      <main className="flex-1 overflow-x-hidden p-6">{children}</main>
+      <main className="min-w-0 flex-1 p-6">{children}</main>
     </div>
   );
 }
