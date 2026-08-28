@@ -85,7 +85,6 @@ export type BillingScheduleRow = {
   weekAmounts: number[];
   weekStatuses: BillingCellStatus[];
   total: number;
-  totalStatus: BillingCellStatus;
 };
 
 /**
@@ -174,7 +173,6 @@ export async function getBillingSchedule(
         weekAmounts: buckets.map(() => 0),
         weekStatuses: buckets.map(() => null),
         total: 0,
-        totalStatus: null,
       };
       groups.set(key, row);
     }
@@ -191,7 +189,6 @@ export async function getBillingSchedule(
       status
     );
     row.total += event.amount;
-    row.totalStatus = combineStatus(row.totalStatus, status);
   }
 
   const rows = [...groups.values()]

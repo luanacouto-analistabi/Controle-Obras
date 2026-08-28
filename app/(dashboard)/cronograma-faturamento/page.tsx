@@ -52,10 +52,6 @@ export default async function CronogramaFaturamentoPage({
       null
     )
   );
-  const grandTotalStatus = rows.reduce<BillingCellStatus>(
-    (status, r) => combineStatus(status, r.totalStatus),
-    null
-  );
 
   const navButtonClass =
     "flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-white text-maua-navy hover:bg-maua-gray-100";
@@ -163,11 +159,7 @@ export default async function CronogramaFaturamentoPage({
                       )}
                     </td>
                   ))}
-                  <td
-                    className={`border-b border-l border-border px-3 py-2 text-right font-semibold tabular-nums ${
-                      STATUS_BG[row.totalStatus ?? "previsto"]
-                    }`}
-                  >
+                  <td className="border-b border-l border-border bg-white px-3 py-2 text-right font-semibold tabular-nums">
                     {formatCurrencyBRL(row.total)}
                   </td>
                 </tr>
@@ -190,11 +182,7 @@ export default async function CronogramaFaturamentoPage({
                     {amount === 0 ? "–" : formatCurrencyBRL(amount)}
                   </td>
                 ))}
-                <td
-                  className={`border-l border-border px-3 py-2 text-right tabular-nums ${
-                    STATUS_BG[grandTotalStatus ?? "previsto"]
-                  }`}
-                >
+                <td className="border-l border-border bg-white px-3 py-2 text-right tabular-nums">
                   {formatCurrencyBRL(grandTotal)}
                 </td>
               </tr>
