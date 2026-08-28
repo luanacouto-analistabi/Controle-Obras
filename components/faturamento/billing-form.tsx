@@ -10,8 +10,8 @@ type BillingRowState = {
   id?: string;
   payment_event_ids: string[];
   billing_date: string;
-  billed_amount: string;
-  overdue_amount: string;
+  invoice_number: string;
+  invoice_date: string;
   new_billing_date: string;
 };
 
@@ -20,8 +20,8 @@ function newBillingRow(): BillingRowState {
     key: crypto.randomUUID(),
     payment_event_ids: [],
     billing_date: "",
-    billed_amount: "",
-    overdue_amount: "",
+    invoice_number: "",
+    invoice_date: "",
     new_billing_date: "",
   };
 }
@@ -32,8 +32,8 @@ function billingRowFromEvent(event: BillingEvent): BillingRowState {
     id: event.id,
     payment_event_ids: event.payment_event_id ? [event.payment_event_id] : [],
     billing_date: event.billing_date,
-    billed_amount: String(event.billed_amount),
-    overdue_amount: String(event.overdue_amount),
+    invoice_number: event.invoice_number ?? "",
+    invoice_date: event.invoice_date ?? "",
     new_billing_date: event.new_billing_date ?? "",
   };
 }
@@ -82,18 +82,22 @@ export function BillingForm({
     );
   }
 
+  const paymentEventById = new Map(paymentEvents.map((pe) => [pe.id, pe]));
+
   const billingEventsJson = JSON.stringify(
     rows.flatMap((row) =>
       row.payment_event_ids.map((paymentEventId, index) => ({
         // Uma parcela por registro em billing_events: quando várias parcelas
         // são marcadas no mesmo bloco, a primeira reaproveita o id existente
-        // (update) e as demais viram novos registros (insert), todas com os
-        // mesmos valores digitados.
+        // (update) e as demais viram novos registros (insert). O valor
+        // faturado vem do próprio evento de pagamento selecionado, não é
+        // digitado.
         id: index === 0 ? row.id : undefined,
         payment_event_id: paymentEventId,
         billing_date: row.billing_date,
-        billed_amount: Number(row.billed_amount || 0),
-        overdue_amount: Number(row.overdue_amount || 0),
+        billed_amount: paymentEventById.get(paymentEventId)?.amount ?? 0,
+        invoice_number: row.invoice_number || null,
+        invoice_date: row.invoice_date || null,
         new_billing_date: row.new_billing_date || null,
       }))
     )
@@ -187,7 +191,9 @@ export function BillingForm({
                           className="h-4 w-4 accent-[#F18213]"
                         />
                         <span>
-                          {pe.payment_event} — {formatCurrencyBRL(pe.amount)}
+                          {pe.payment_event} —{" "}
+                          {pe.invoice_description || "Sem descrição"} —{" "}
+                          {formatCurrencyBRL(pe.amount)}
                         </span>
                       </label>
                     );
@@ -209,27 +215,22 @@ export function BillingForm({
                   />
                 </label>
                 <label className="flex flex-col gap-1.5">
-                  <span className={labelClass}>Faturado (R$)</span>
+                  <span className={labelClass}>Nº da Invoice</span>
                   <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={row.billed_amount}
+                    value={row.invoice_number}
                     onChange={(e) =>
-                      updateRow(row.key, { billed_amount: e.target.value })
+                      updateRow(row.key, { invoice_number: e.target.value })
                     }
                     className={inputClass}
                   />
                 </label>
                 <label className="flex flex-col gap-1.5">
-                  <span className={labelClass}>Vencido (R$)</span>
+                  <span className={labelClass}>Data da Invoice</span>
                   <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={row.overdue_amount}
+                    type="date"
+                    value={row.invoice_date}
                     onChange={(e) =>
-                      updateRow(row.key, { overdue_amount: e.target.value })
+                      updateRow(row.key, { invoice_date: e.target.value })
                     }
                     className={inputClass}
                   />

@@ -14,7 +14,6 @@ type PaymentRowState = {
   id?: string;
   payment_event: string;
   invoice_description: string;
-  invoice_date: string;
   payment_condition: string;
   expected_payment_date: string;
   amount: string;
@@ -26,7 +25,6 @@ type PaymentRowState = {
     | "po_sem_saldo";
   measurement_status: "aprovada" | "em_discussao" | "prevista";
   po_issued: boolean;
-  invoice_number: string;
 };
 
 const STATUS_OPTIONS: Array<{
@@ -60,14 +58,12 @@ function newPaymentRow(): PaymentRowState {
     key: crypto.randomUUID(),
     payment_event: "",
     invoice_description: "",
-    invoice_date: "",
     payment_condition: "",
     expected_payment_date: "",
     amount: "",
     status: "previsto",
     measurement_status: "prevista",
     po_issued: false,
-    invoice_number: "",
   };
 }
 
@@ -77,14 +73,12 @@ function paymentRowFromEvent(event: PaymentEvent): PaymentRowState {
     id: event.id,
     payment_event: event.payment_event,
     invoice_description: event.invoice_description ?? "",
-    invoice_date: event.invoice_date ?? "",
     payment_condition: event.payment_condition ?? "",
     expected_payment_date: event.expected_payment_date ?? "",
     amount: String(event.amount),
     status: event.status,
     measurement_status: event.measurement_status,
     po_issued: event.po_issued,
-    invoice_number: event.invoice_number ?? "",
   };
 }
 
@@ -168,14 +162,12 @@ export function ProjectForm(props: ProjectFormProps) {
       id: row.id,
       payment_event: row.payment_event,
       invoice_description: row.invoice_description || null,
-      invoice_date: row.invoice_date || null,
       payment_condition: row.payment_condition || null,
       expected_payment_date: row.expected_payment_date || null,
       amount: Number(row.amount || 0),
       status: row.status,
       measurement_status: row.measurement_status,
       po_issued: row.po_issued,
-      invoice_number: row.invoice_number || null,
     }))
   );
 
@@ -363,31 +355,6 @@ export function ProjectForm(props: ProjectFormProps) {
                     onChange={(e) =>
                       updatePaymentRow(row.key, {
                         invoice_description: e.target.value,
-                      })
-                    }
-                    className={inputClass}
-                  />
-                </label>
-                <label className="flex flex-col gap-1.5">
-                  <span className={labelClass}>Nº da Invoice</span>
-                  <input
-                    value={row.invoice_number}
-                    onChange={(e) =>
-                      updatePaymentRow(row.key, {
-                        invoice_number: e.target.value,
-                      })
-                    }
-                    className={inputClass}
-                  />
-                </label>
-                <label className="flex flex-col gap-1.5">
-                  <span className={labelClass}>Data da Invoice</span>
-                  <input
-                    type="date"
-                    value={row.invoice_date}
-                    onChange={(e) =>
-                      updatePaymentRow(row.key, {
-                        invoice_date: e.target.value,
                       })
                     }
                     className={inputClass}

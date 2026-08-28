@@ -43,12 +43,10 @@ export function PaymentEventsTable({
             {[
               "Eventos",
               "Descrição na Invoice",
-              "Data Invoice",
               "Condição",
               "Data Prevista Pagamento",
               "Valor",
               "Emissão PO",
-              "Invoice",
             ].map((label) => (
               <th
                 key={label}
@@ -83,9 +81,6 @@ export function PaymentEventsTable({
                   <td className="border-b border-border px-3 py-2">
                     {event.invoice_description || "–"}
                   </td>
-                  <td className="border-b border-border px-3 py-2 tabular-nums">
-                    {formatDate(event.invoice_date)}
-                  </td>
                   <td className="border-b border-border px-3 py-2 text-center">
                     {event.payment_condition || "–"}
                   </td>
@@ -98,13 +93,10 @@ export function PaymentEventsTable({
                   <td className="border-b border-border px-3 py-2 text-center">
                     {event.po_issued ? "Sim" : "Não"}
                   </td>
-                  <td className="border-b border-border px-3 py-2">
-                    {event.invoice_number || "–"}
-                  </td>
                 </tr>
                 {isExpanded && (
                   <tr>
-                    <td colSpan={8} className="border-b border-border bg-surface p-4">
+                    <td colSpan={6} className="border-b border-border bg-surface p-4">
                       {!event.expected_payment_date ? (
                         <p className="text-sm text-maua-gray-500">
                           Este evento não tem Data Prevista de Pagamento —
@@ -185,13 +177,13 @@ export function PaymentEventsTable({
         </tbody>
         <tfoot>
           <tr className="bg-maua-gray-100 font-bold">
-            <td colSpan={5} className="px-3 py-2 text-maua-navy">
+            <td colSpan={4} className="px-3 py-2 text-maua-navy">
               Total
             </td>
             <td className="px-3 py-2 text-right tabular-nums">
               {formatCurrencyBRL(total)}
             </td>
-            <td colSpan={2}></td>
+            <td></td>
           </tr>
         </tfoot>
       </table>

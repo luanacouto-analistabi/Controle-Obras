@@ -51,14 +51,12 @@ function diffGeneralFields(
 const PAYMENT_FIELDS: Array<keyof PaymentEventInput> = [
   "payment_event",
   "invoice_description",
-  "invoice_date",
   "payment_condition",
   "expected_payment_date",
   "amount",
   "status",
   "measurement_status",
   "po_issued",
-  "invoice_number",
 ];
 
 function diffPaymentEvents(
@@ -110,7 +108,8 @@ const BILLING_FIELDS: Array<keyof BillingEventInput> = [
   "payment_event_id",
   "billing_date",
   "billed_amount",
-  "overdue_amount",
+  "invoice_number",
+  "invoice_date",
   "new_billing_date",
 ];
 
@@ -164,14 +163,12 @@ function toPaymentEventRow(event: PaymentEventInput, projectId: string) {
     project_id: projectId,
     payment_event: event.payment_event,
     invoice_description: event.invoice_description || null,
-    invoice_date: event.invoice_date || null,
     payment_condition: event.payment_condition || null,
     expected_payment_date: event.expected_payment_date || null,
     amount: event.amount,
     status: event.status,
     measurement_status: event.measurement_status,
     po_issued: event.po_issued,
-    invoice_number: event.invoice_number || null,
   };
 }
 
@@ -181,7 +178,8 @@ function toBillingEventRow(event: BillingEventInput, projectId: string) {
     payment_event_id: event.payment_event_id,
     billing_date: event.billing_date,
     billed_amount: event.billed_amount,
-    overdue_amount: event.overdue_amount,
+    invoice_number: event.invoice_number || null,
+    invoice_date: event.invoice_date || null,
     new_billing_date: event.new_billing_date || null,
   };
 }

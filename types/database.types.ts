@@ -44,13 +44,11 @@ export type PaymentEvent = {
   project_id: string;
   payment_event: string;
   invoice_description: string | null;
-  invoice_date: string | null;
   payment_condition: string | null;
   expected_payment_date: string | null;
   amount: number;
   measurement_date: string | null;
   po_issued: boolean;
-  invoice_number: string | null;
   status: PaymentStatus;
   measurement_status: MeasurementStatus;
   paid_amount: number | null;
@@ -66,6 +64,8 @@ export type BillingEvent = {
   billing_date: string;
   billed_amount: number;
   overdue_amount: number;
+  invoice_number: string | null;
+  invoice_date: string | null;
   new_billing_date: string | null;
   billing_status: BillingStatus;
   created_at: string;

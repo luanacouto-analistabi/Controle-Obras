@@ -22,7 +22,6 @@ export const PaymentEventInputSchema = z.object({
   id: z.string().optional(),
   payment_event: z.string().min(1, { error: "Informe o evento de pagamento." }),
   invoice_description: z.string().optional().nullable(),
-  invoice_date: z.string().optional().nullable(),
   payment_condition: z.string().optional().nullable(),
   expected_payment_date: z.string().optional().nullable(),
   amount: z.number({ error: "Informe um valor válido." }).min(0),
@@ -34,7 +33,6 @@ export const PaymentEventInputSchema = z.object({
     error: "Selecione o status da medição.",
   }),
   po_issued: z.boolean(),
-  invoice_number: z.string().optional().nullable(),
 });
 
 export const BillingEventInputSchema = z.object({
@@ -44,7 +42,8 @@ export const BillingEventInputSchema = z.object({
     .min(1, { error: "Selecione a qual evento de pagamento este faturamento se refere." }),
   billing_date: z.string().min(1, { error: "Informe a data de faturamento." }),
   billed_amount: z.number({ error: "Informe um valor válido." }).min(0),
-  overdue_amount: z.number({ error: "Informe um valor válido." }).min(0),
+  invoice_number: z.string().optional().nullable(),
+  invoice_date: z.string().optional().nullable(),
   new_billing_date: z.string().optional().nullable(),
 });
 
