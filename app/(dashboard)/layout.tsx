@@ -20,7 +20,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex min-h-screen bg-surface">
-      <aside className="flex w-64 flex-shrink-0 flex-col gap-5 bg-maua-navy p-4">
+      <aside className="flex w-80 flex-shrink-0 flex-col gap-5 bg-maua-navy p-4">
         <div className="flex items-center justify-center rounded-xl bg-white p-3 shadow-card">
           <Image
             src="/estaleiro-maua-logo.png"

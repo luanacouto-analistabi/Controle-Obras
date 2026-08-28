@@ -17,7 +17,11 @@ function Money({ value }: { value: number }) {
   if (value === 0) {
     return <span className="text-maua-gray-400">–</span>;
   }
-  return <span className="tabular-nums">{formatCurrencyBRL(value)}</span>;
+  return (
+    <span className="whitespace-nowrap text-sm tabular-nums">
+      {formatCurrencyBRL(value)}
+    </span>
+  );
 }
 
 export function ProjectsSummaryTable({ rows }: { rows: ProjectSummaryRow[] }) {
@@ -67,13 +71,13 @@ export function ProjectsSummaryTable({ rows }: { rows: ProjectSummaryRow[] }) {
               rowSpan={2}
               className="border-b border-border bg-maua-navy px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-white"
             >
-              Cliente
+              Obra
             </th>
             <th
               rowSpan={2}
               className="border-b border-border bg-maua-navy px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-white"
             >
-              Obra
+              Cliente
             </th>
             <th
               colSpan={3}
@@ -126,7 +130,7 @@ export function ProjectsSummaryTable({ rows }: { rows: ProjectSummaryRow[] }) {
             const s = row.summary ?? ZERO;
             return (
               <tr key={row.id} className="hover:bg-maua-gray-50">
-                <td className="border-b border-border px-3 py-2 font-mono text-xs">
+                <td className="border-b border-border px-3 py-2 text-maua-navy">
                   <Link
                     href={`/projetos/${row.id}`}
                     className="font-semibold text-maua-navy hover:underline"
@@ -134,11 +138,11 @@ export function ProjectsSummaryTable({ rows }: { rows: ProjectSummaryRow[] }) {
                     {row.cc}
                   </Link>
                 </td>
-                <td className="border-b border-border px-3 py-2 text-maua-gray-900">
-                  {row.client}
-                </td>
                 <td className="border-b border-border px-3 py-2 text-maua-navy">
                   {row.vessel_name}
+                </td>
+                <td className="border-b border-border px-3 py-2 text-maua-gray-900">
+                  {row.client}
                 </td>
                 <td className="border-b border-l border-border px-3 py-2 text-right">
                   <Money value={s.approved_amount} />

@@ -13,15 +13,13 @@ type Totals = {
 };
 
 const CARDS: Array<{
-  key: keyof Omit<Totals, "projectCount">;
+  key: keyof Omit<Totals, "projectCount" | "poNotIssued" | "poNoBalance">;
   label: string;
   tone: "neutral" | "ok" | "warn" | "risk";
 }> = [
   { key: "approved", label: "Aprovado", tone: "ok" },
   { key: "inDiscussion", label: "Em discussão", tone: "neutral" },
   { key: "forecast", label: "Previsto", tone: "neutral" },
-  { key: "poNotIssued", label: "PO não emitida", tone: "warn" },
-  { key: "poNoBalance", label: "PO sem saldo", tone: "warn" },
   { key: "paid", label: "Pago", tone: "ok" },
   { key: "upcoming", label: "A vencer", tone: "warn" },
   { key: "overdue", label: "Vencido", tone: "risk" },
@@ -36,25 +34,18 @@ const TONE_CLASS: Record<(typeof CARDS)[number]["tone"], string> = {
 
 export function KpiCards({ totals }: { totals: Totals }) {
   return (
-    <div className="grid grid-cols-[repeat(auto-fit,minmax(130px,1fr))] gap-3">
-      <div className="rounded-xl border border-border bg-white p-4 shadow-card">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-maua-navy/70">
-          Projetos
-        </p>
-        <p className="mt-1 text-xl font-bold tabular-nums text-maua-navy">
-          {totals.projectCount}
-        </p>
-      </div>
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
       {CARDS.map((card) => (
         <div
           key={card.key}
-          className="rounded-xl border border-border bg-white p-4 shadow-card"
+          className="min-w-0 rounded-xl border border-border bg-white p-4 shadow-card"
         >
           <p className="text-[10px] font-bold uppercase tracking-wider text-maua-navy/70">
             {card.label}
           </p>
           <p
-            className={`mt-1 text-xl font-bold tabular-nums ${TONE_CLASS[card.tone]}`}
+            className={`mt-1 truncate text-xl font-bold tabular-nums ${TONE_CLASS[card.tone]}`}
+            title={formatCurrencyBRL(totals[card.key])}
           >
             {formatCurrencyBRL(totals[card.key])}
           </p>

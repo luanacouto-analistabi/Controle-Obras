@@ -47,6 +47,7 @@ export type LastChange = {
 
 export type ProjectConfigRow = Project & {
   lastChange: LastChange | null;
+  totalAmount: number;
 };
 
 /** Todos os projetos + quem/quando foi a última alteração, para a tela de Configuração. */
@@ -59,11 +60,26 @@ export async function listProjectsForConfig(): Promise<ProjectConfigRow[]> {
     .order("cc");
   if (projectsError) throw projectsError;
 
-  const { data: historyRows, error: historyError } = await supabase
-    .from("project_change_history")
-    .select("project_id, user_id, changed_at")
-    .order("changed_at", { ascending: false });
+  const [
+    { data: historyRows, error: historyError },
+    { data: paymentEvents, error: paymentEventsError },
+  ] = await Promise.all([
+    supabase
+      .from("project_change_history")
+      .select("project_id, user_id, changed_at")
+      .order("changed_at", { ascending: false }),
+    supabase.from("payment_events").select("project_id, amount"),
+  ]);
   if (historyError) throw historyError;
+  if (paymentEventsError) throw paymentEventsError;
+
+  const totalByProject = new Map<string, number>();
+  for (const event of paymentEvents ?? []) {
+    totalByProject.set(
+      event.project_id,
+      (totalByProject.get(event.project_id) ?? 0) + event.amount
+    );
+  }
 
   const latestByProject = new Map<
     string,
@@ -100,6 +116,7 @@ export async function listProjectsForConfig(): Promise<ProjectConfigRow[]> {
               changedAt: last.changed_at,
             }
           : null,
+      totalAmount: totalByProject.get(project.id) ?? 0,
     };
   });
 }

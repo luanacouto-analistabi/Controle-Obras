@@ -30,7 +30,7 @@ export default async function TermoAceitePage() {
           <table className="w-full min-w-[700px] border-collapse text-base">
             <thead>
               <tr>
-                {["CC", "Coordenador", "Cliente", "Obra"].map((label) => (
+                {["CC", "Obra", "Cliente", "Coordenador"].map((label) => (
                   <th
                     key={label}
                     className="border-b border-border bg-maua-navy px-3 py-2 text-left text-xs font-bold uppercase tracking-wider text-white"
@@ -51,14 +51,14 @@ export default async function TermoAceitePage() {
                       {row.cc}
                     </Link>
                   </td>
-                  <td className="border-b border-border px-3 py-2">
-                    {row.project_coordinator}
+                  <td className="border-b border-border px-3 py-2 text-maua-navy">
+                    {row.vessel_name}
                   </td>
                   <td className="border-b border-border px-3 py-2">
                     {row.client}
                   </td>
-                  <td className="border-b border-border px-3 py-2 text-maua-navy">
-                    {row.vessel_name}
+                  <td className="border-b border-border px-3 py-2">
+                    {row.project_coordinator}
                   </td>
                 </tr>
               ))}

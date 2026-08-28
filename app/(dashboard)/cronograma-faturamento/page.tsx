@@ -137,7 +137,7 @@ export default async function CronogramaFaturamentoPage({
             <tbody>
               {rows.map((row) => (
                 <tr key={row.key} className="hover:bg-maua-gray-50">
-                  <td className="border-b border-border px-3 py-2 font-mono text-xs">
+                  <td className="border-b border-border px-3 py-2 text-maua-navy">
                     {row.cc} - {row.category}
                   </td>
                   <td className="border-b border-border px-3 py-2 text-maua-navy">

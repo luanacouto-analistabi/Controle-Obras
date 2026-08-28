@@ -47,7 +47,7 @@ export function MainNav() {
             )}
           >
             <Icon className="h-5 w-5 flex-shrink-0" strokeWidth={1.8} aria-hidden />
-            <span>{item.label}</span>
+            <span className="whitespace-nowrap">{item.label}</span>
           </Link>
         );
       })}

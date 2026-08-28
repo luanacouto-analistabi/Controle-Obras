@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { listProjectsForConfig } from "@/lib/services/projects";
 import { getCurrentUser } from "@/lib/supabase/dal";
+import { formatCurrencyBRL } from "@/lib/utils";
 
 function formatDateTime(iso: string) {
   return new Intl.DateTimeFormat("pt-BR", {
@@ -53,9 +54,10 @@ export default async function ConfiguracaoPage() {
               <tr>
                 {[
                   "CC",
-                  "Coordenador",
-                  "Cliente",
                   "Obra",
+                  "Cliente",
+                  "Coordenador",
+                  "Valor Total R$",
                   "Última alteração",
                 ].map((label) => (
                   <th
@@ -70,7 +72,7 @@ export default async function ConfiguracaoPage() {
             <tbody>
               {rows.map((row) => (
                 <tr key={row.id} className="hover:bg-maua-gray-50">
-                  <td className="border-b border-border px-3 py-2 font-mono text-sm">
+                  <td className="border-b border-border px-3 py-2 text-maua-navy">
                     <Link
                       href={`/configuracao/${row.id}`}
                       className="font-semibold text-maua-navy hover:underline"
@@ -78,14 +80,17 @@ export default async function ConfiguracaoPage() {
                       {row.cc}
                     </Link>
                   </td>
-                  <td className="border-b border-border px-3 py-2">
-                    {row.project_coordinator}
+                  <td className="border-b border-border px-3 py-2 text-maua-navy">
+                    {row.vessel_name}
                   </td>
                   <td className="border-b border-border px-3 py-2">
                     {row.client}
                   </td>
-                  <td className="border-b border-border px-3 py-2 text-maua-navy">
-                    {row.vessel_name}
+                  <td className="border-b border-border px-3 py-2">
+                    {row.project_coordinator}
+                  </td>
+                  <td className="border-b border-border px-3 py-2 text-right tabular-nums">
+                    {formatCurrencyBRL(row.totalAmount)}
                   </td>
                   <td className="border-b border-border px-3 py-2 text-maua-gray-500">
                     {row.lastChange ? (
