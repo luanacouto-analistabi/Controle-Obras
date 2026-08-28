@@ -2,7 +2,11 @@
 
 import { Fragment, useState } from "react";
 import { filterOsCompletedBy, formatCurrencyBRL } from "@/lib/utils";
-import type { OsAcceptanceTerm, PaymentEvent } from "@/types/database.types";
+import type {
+  BillingEvent,
+  OsAcceptanceTerm,
+  PaymentEvent,
+} from "@/types/database.types";
 import type { EapRecord } from "@/types/maua-scp.types";
 
 function formatDate(iso: string | null) {
@@ -12,15 +16,24 @@ function formatDate(iso: string | null) {
 
 export function PaymentEventsTable({
   paymentEvents,
+  billingEvents,
   eapRows,
   acceptanceTerms,
 }: {
   paymentEvents: PaymentEvent[];
+  billingEvents: BillingEvent[];
   eapRows: EapRecord[];
   acceptanceTerms: Record<string, OsAcceptanceTerm>;
 }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const total = paymentEvents.reduce((sum, e) => sum + e.amount, 0);
+  const billingByPaymentEventId = new Map(
+    billingEvents
+      .filter((b): b is BillingEvent & { payment_event_id: string } =>
+        Boolean(b.payment_event_id)
+      )
+      .map((b) => [b.payment_event_id, b])
+  );
 
   if (paymentEvents.length === 0) {
     return (
@@ -47,6 +60,10 @@ export function PaymentEventsTable({
               "Data Prevista Pagamento",
               "Valor",
               "Emissão PO",
+              "Nº Invoice",
+              "Data Faturamento",
+              "Data Pagamento",
+              "Status",
             ].map((label) => (
               <th
                 key={label}
@@ -63,6 +80,8 @@ export function PaymentEventsTable({
             const osRows = event.expected_payment_date
               ? filterOsCompletedBy(eapRows, event.expected_payment_date)
               : [];
+            const billing = billingByPaymentEventId.get(event.id);
+            const isPaid = Boolean(event.paid_date);
 
             return (
               <Fragment key={event.id}>
@@ -93,10 +112,30 @@ export function PaymentEventsTable({
                   <td className="border-b border-border px-3 py-2 text-center">
                     {event.po_issued ? "Sim" : "Não"}
                   </td>
+                  <td className="border-b border-border px-3 py-2">
+                    {billing?.invoice_number || "–"}
+                  </td>
+                  <td className="border-b border-border px-3 py-2 tabular-nums">
+                    {formatDate(billing?.billing_date ?? null)}
+                  </td>
+                  <td className="border-b border-border px-3 py-2 tabular-nums">
+                    {formatDate(event.paid_date)}
+                  </td>
+                  <td className="border-b border-border px-3 py-2">
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                        isPaid
+                          ? "bg-[#9AD595]/40 text-[#1B5E37]"
+                          : "bg-[#DFA1AA]/40 text-[#7C2737]"
+                      }`}
+                    >
+                      {isPaid ? "Pago" : "Não pago"}
+                    </span>
+                  </td>
                 </tr>
                 {isExpanded && (
                   <tr>
-                    <td colSpan={6} className="border-b border-border bg-surface p-4">
+                    <td colSpan={10} className="border-b border-border bg-surface p-4">
                       {!event.expected_payment_date ? (
                         <p className="text-sm text-maua-gray-500">
                           Este evento não tem Data Prevista de Pagamento —
@@ -183,7 +222,7 @@ export function PaymentEventsTable({
             <td className="px-3 py-2 text-right tabular-nums">
               {formatCurrencyBRL(total)}
             </td>
-            <td></td>
+            <td colSpan={5}></td>
           </tr>
         </tfoot>
       </table>

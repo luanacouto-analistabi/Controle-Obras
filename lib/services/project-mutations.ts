@@ -104,7 +104,7 @@ function diffPaymentEvents(
   return changes;
 }
 
-const BILLING_FIELDS: Array<keyof BillingEventInput> = [
+const BILLING_FIELDS: Array<keyof BillingEventInput & keyof BillingEvent> = [
   "payment_event_id",
   "billing_date",
   "billed_amount",
@@ -342,7 +342,15 @@ export async function updateProject(
  * faturamento. Ainda registra o diff em project_change_history (sem
  * documento/motivo associado) para manter rastreabilidade de quem mudou
  * o quê e quando.
+ *
+ * O Status (Pago/Não pago) de cada linha grava paid_date/paid_amount no
+ * payment_event vinculado — é o único lugar da interface que preenche
+ * esses campos, e são eles que alimentam o KPI "Pago" do Consolidado.
  */
+function paidStatusLabel(paidDate: string | null | undefined) {
+  return paidDate ? `Pago em ${paidDate}` : "Não pago";
+}
+
 export async function updateBillingEvents(
   projectId: string,
   billingEvents: BillingEventInput[],
@@ -350,13 +358,35 @@ export async function updateBillingEvents(
 ) {
   const supabase = await createClient();
 
-  const { data: oldBillings, error: billingsError } = await supabase
-    .from("billing_events")
-    .select("*")
-    .eq("project_id", projectId);
+  const [
+    { data: oldBillings, error: billingsError },
+    { data: paymentEvents, error: paymentsError },
+  ] = await Promise.all([
+    supabase.from("billing_events").select("*").eq("project_id", projectId),
+    supabase.from("payment_events").select("*").eq("project_id", projectId),
+  ]);
   if (billingsError) throw billingsError;
+  if (paymentsError) throw paymentsError;
+
+  const paymentById = new Map(
+    (paymentEvents ?? []).map((p) => [p.id, p])
+  );
 
   const changes = diffBillingEvents(oldBillings ?? [], billingEvents);
+
+  for (const event of billingEvents) {
+    const pe = paymentById.get(event.payment_event_id);
+    const oldPaidDate = pe?.paid_date ?? null;
+    const newPaidDate = event.status === "pago" ? event.paid_date ?? null : null;
+    if (oldPaidDate !== newPaidDate) {
+      changes.push({
+        field_name: `Pagamento "${pe?.payment_event ?? ""}" — status de pagamento`,
+        old_value: paidStatusLabel(oldPaidDate),
+        new_value: paidStatusLabel(newPaidDate),
+      });
+    }
+  }
+
   if (changes.length === 0) {
     throw new Error("Nenhuma alteração para salvar.");
   }
@@ -380,6 +410,16 @@ export async function updateBillingEvents(
       ? await supabase.from("billing_events").update(row).eq("id", event.id)
       : await supabase.from("billing_events").insert(row);
     if (error) throw error;
+
+    const paidUpdate =
+      event.status === "pago"
+        ? { paid_date: event.paid_date ?? null, paid_amount: row.billed_amount }
+        : { paid_date: null, paid_amount: null };
+    const { error: paidError } = await supabase
+      .from("payment_events")
+      .update(paidUpdate)
+      .eq("id", event.payment_event_id);
+    if (paidError) throw paidError;
   }
 
   const { error: historyError } = await supabase

@@ -62,20 +62,20 @@ export default async function EditarProjetoPage({
       </div>
 
       {canEdit ? (
-        <>
-          <ProjectForm
-            mode="edit"
-            project={project}
-            paymentEvents={paymentEvents}
-            centrosCusto={centrosCusto}
-            vesselNamesByCc={vesselNamesByCc}
-          />
-          <BillingForm
-            projectId={project.id}
-            paymentEvents={paymentEvents}
-            billingEvents={billingEvents}
-          />
-        </>
+        <ProjectForm
+          mode="edit"
+          project={project}
+          paymentEvents={paymentEvents}
+          centrosCusto={centrosCusto}
+          vesselNamesByCc={vesselNamesByCc}
+          billingSection={
+            <BillingForm
+              projectId={project.id}
+              paymentEvents={paymentEvents}
+              billingEvents={billingEvents}
+            />
+          }
+        />
       ) : (
         <div className="rounded-xl border border-dashed border-border bg-white p-6 text-sm text-maua-gray-500 shadow-card">
           Seu perfil (Visualizador) não tem permissão para editar projetos.

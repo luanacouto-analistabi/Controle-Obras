@@ -13,6 +13,8 @@ type BillingRowState = {
   invoice_number: string;
   invoice_date: string;
   new_billing_date: string;
+  status: "pago" | "nao_pago";
+  paid_date: string;
 };
 
 function newBillingRow(): BillingRowState {
@@ -23,10 +25,15 @@ function newBillingRow(): BillingRowState {
     invoice_number: "",
     invoice_date: "",
     new_billing_date: "",
+    status: "nao_pago",
+    paid_date: "",
   };
 }
 
-function billingRowFromEvent(event: BillingEvent): BillingRowState {
+function billingRowFromEvent(
+  event: BillingEvent,
+  linkedPaymentEvent: PaymentEvent | undefined
+): BillingRowState {
   return {
     key: event.id,
     id: event.id,
@@ -35,7 +42,14 @@ function billingRowFromEvent(event: BillingEvent): BillingRowState {
     invoice_number: event.invoice_number ?? "",
     invoice_date: event.invoice_date ?? "",
     new_billing_date: event.new_billing_date ?? "",
+    status: linkedPaymentEvent?.paid_date ? "pago" : "nao_pago",
+    paid_date: linkedPaymentEvent?.paid_date ?? "",
   };
+}
+
+function formatDate(iso: string | null | undefined) {
+  if (!iso) return "–";
+  return new Intl.DateTimeFormat("pt-BR").format(new Date(`${iso}T00:00:00`));
 }
 
 const inputClass =
@@ -57,9 +71,19 @@ export function BillingForm({
     FormData
   >(action, undefined);
 
+  const paymentEventById = new Map(paymentEvents.map((pe) => [pe.id, pe]));
+
   const [rows, setRows] = useState<BillingRowState[]>(() =>
-    billingEvents.map(billingRowFromEvent)
+    billingEvents.map((event) =>
+      billingRowFromEvent(
+        event,
+        event.payment_event_id
+          ? paymentEventById.get(event.payment_event_id)
+          : undefined
+      )
+    )
   );
+  const [editingKey, setEditingKey] = useState<string | null>(null);
   const [clientError, setClientError] = useState<string | null>(null);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -82,8 +106,6 @@ export function BillingForm({
     );
   }
 
-  const paymentEventById = new Map(paymentEvents.map((pe) => [pe.id, pe]));
-
   const billingEventsJson = JSON.stringify(
     rows.flatMap((row) =>
       row.payment_event_ids.map((paymentEventId, index) => ({
@@ -99,11 +121,14 @@ export function BillingForm({
         invoice_number: row.invoice_number || null,
         invoice_date: row.invoice_date || null,
         new_billing_date: row.new_billing_date || null,
+        status: row.status,
+        paid_date: row.status === "pago" ? row.paid_date || null : null,
       }))
     )
   );
 
   const hasPaymentEvents = paymentEvents.length > 0;
+  const editingRow = rows.find((row) => row.key === editingKey) ?? null;
 
   return (
     <form
@@ -121,7 +146,11 @@ export function BillingForm({
           <button
             type="button"
             disabled={!hasPaymentEvents}
-            onClick={() => setRows((current) => [...current, newBillingRow()])}
+            onClick={() => {
+              const row = newBillingRow();
+              setRows((current) => [...current, row]);
+              setEditingKey(row.key);
+            }}
             className="h-8 rounded-lg bg-maua-navy px-3 text-xs font-bold text-white hover:bg-[#2D3F4A] disabled:opacity-40"
           >
             + Adicionar faturamento
@@ -141,117 +170,226 @@ export function BillingForm({
           </p>
         )}
 
-        <div className="flex flex-col gap-4">
-          {rows.map((row, index) => (
-            <div
-              key={row.key}
-              className="rounded-lg border border-border bg-surface p-4"
-            >
-              <div className="mb-3 flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-maua-navy/70">
-                  Faturamento {index + 1}
-                </span>
+        {rows.length > 0 && (
+          <div className="overflow-x-auto rounded-lg border border-border">
+            <table className="w-full min-w-[800px] border-collapse text-sm">
+              <thead>
+                <tr>
+                  {[
+                    "Evento(s) de pagamento",
+                    "Nº Invoice",
+                    "Data Faturamento",
+                    "Valor Faturado",
+                    "Status",
+                    "Data Real de Pagamento",
+                    "",
+                  ].map((label) => (
+                    <th
+                      key={label}
+                      className="border-b border-border bg-maua-gray-50 px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-maua-navy/70"
+                    >
+                      {label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => {
+                  const events = row.payment_event_ids
+                    .map((id) => paymentEventById.get(id)?.payment_event)
+                    .filter(Boolean);
+                  const total = row.payment_event_ids.reduce(
+                    (sum, id) => sum + (paymentEventById.get(id)?.amount ?? 0),
+                    0
+                  );
+                  return (
+                    <tr key={row.key} className="hover:bg-maua-gray-50">
+                      <td className="border-b border-border px-3 py-2">
+                        {events.length > 0 ? events.join(", ") : "–"}
+                      </td>
+                      <td className="border-b border-border px-3 py-2">
+                        {row.invoice_number || "–"}
+                      </td>
+                      <td className="border-b border-border px-3 py-2 tabular-nums">
+                        {formatDate(row.billing_date)}
+                      </td>
+                      <td className="border-b border-border px-3 py-2 text-right tabular-nums">
+                        {formatCurrencyBRL(total)}
+                      </td>
+                      <td className="border-b border-border px-3 py-2">
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                            row.status === "pago"
+                              ? "bg-[#9AD595]/40 text-[#1B5E37]"
+                              : "bg-[#DFA1AA]/40 text-[#7C2737]"
+                          }`}
+                        >
+                          {row.status === "pago" ? "Pago" : "Não pago"}
+                        </span>
+                      </td>
+                      <td className="border-b border-border px-3 py-2 tabular-nums">
+                        {row.status === "pago" ? formatDate(row.paid_date) : "–"}
+                      </td>
+                      <td className="border-b border-border px-3 py-2 text-right">
+                        <button
+                          type="button"
+                          onClick={() => setEditingKey(row.key)}
+                          className="text-xs font-semibold text-maua-navy hover:underline"
+                        >
+                          Editar
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {editingRow && (
+          <div className="mt-4 rounded-lg border border-[#F18213]/40 bg-surface p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-maua-navy/70">
+                {editingRow.id ? "Editar faturamento" : "Novo faturamento"}
+              </span>
+              <div className="flex gap-3">
                 <button
                   type="button"
                   onClick={() =>
                     setRows((current) =>
-                      current.filter((r) => r.key !== row.key)
+                      current.filter((r) => r.key !== editingRow.key)
                     )
                   }
                   className="text-xs font-semibold text-red-600 hover:underline"
                 >
                   Remover
                 </button>
-              </div>
-
-              <div className="mb-3 flex flex-col gap-1.5">
-                <span className={labelClass}>
-                  Evento de pagamento (selecione um ou mais)
-                </span>
-                <div className="flex max-h-40 flex-col gap-1 overflow-y-auto rounded-lg border border-border bg-white p-2">
-                  {paymentEvents.map((pe) => {
-                    const checked = row.payment_event_ids.includes(pe.id);
-                    return (
-                      <label
-                        key={pe.id}
-                        className="flex items-center gap-2 rounded px-1.5 py-1 text-sm hover:bg-maua-gray-50"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={() =>
-                            updateRow(row.key, {
-                              payment_event_ids: checked
-                                ? row.payment_event_ids.filter(
-                                    (id) => id !== pe.id
-                                  )
-                                : [...row.payment_event_ids, pe.id],
-                            })
-                          }
-                          className="h-4 w-4 accent-[#F18213]"
-                        />
-                        <span>
-                          {pe.payment_event} —{" "}
-                          {pe.invoice_description || "Sem descrição"} —{" "}
-                          {formatCurrencyBRL(pe.amount)}
-                        </span>
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                <label className="flex flex-col gap-1.5">
-                  <span className={labelClass}>Data de Faturamento</span>
-                  <input
-                    type="date"
-                    required
-                    value={row.billing_date}
-                    onChange={(e) =>
-                      updateRow(row.key, { billing_date: e.target.value })
-                    }
-                    className={inputClass}
-                  />
-                </label>
-                <label className="flex flex-col gap-1.5">
-                  <span className={labelClass}>Nº da Invoice</span>
-                  <input
-                    value={row.invoice_number}
-                    onChange={(e) =>
-                      updateRow(row.key, { invoice_number: e.target.value })
-                    }
-                    className={inputClass}
-                  />
-                </label>
-                <label className="flex flex-col gap-1.5">
-                  <span className={labelClass}>Data da Invoice</span>
-                  <input
-                    type="date"
-                    value={row.invoice_date}
-                    onChange={(e) =>
-                      updateRow(row.key, { invoice_date: e.target.value })
-                    }
-                    className={inputClass}
-                  />
-                </label>
-                <label className="flex flex-col gap-1.5">
-                  <span className={labelClass}>Nova Data de Faturamento</span>
-                  <input
-                    type="date"
-                    value={row.new_billing_date}
-                    onChange={(e) =>
-                      updateRow(row.key, {
-                        new_billing_date: e.target.value,
-                      })
-                    }
-                    className={inputClass}
-                  />
-                </label>
+                <button
+                  type="button"
+                  onClick={() => setEditingKey(null)}
+                  className="text-xs font-semibold text-maua-navy hover:underline"
+                >
+                  Concluir edição
+                </button>
               </div>
             </div>
-          ))}
-        </div>
+
+            <div className="mb-3 flex flex-col gap-1.5">
+              <span className={labelClass}>
+                Evento de pagamento (selecione um ou mais)
+              </span>
+              <div className="flex max-h-40 flex-col gap-1 overflow-y-auto rounded-lg border border-border bg-white p-2">
+                {paymentEvents.map((pe) => {
+                  const checked = editingRow.payment_event_ids.includes(pe.id);
+                  return (
+                    <label
+                      key={pe.id}
+                      className="flex items-center gap-2 rounded px-1.5 py-1 text-sm hover:bg-maua-gray-50"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() =>
+                          updateRow(editingRow.key, {
+                            payment_event_ids: checked
+                              ? editingRow.payment_event_ids.filter(
+                                  (id) => id !== pe.id
+                                )
+                              : [...editingRow.payment_event_ids, pe.id],
+                          })
+                        }
+                        className="h-4 w-4 accent-[#F18213]"
+                      />
+                      <span>
+                        {pe.payment_event} —{" "}
+                        {pe.invoice_description || "Sem descrição"} —{" "}
+                        {formatCurrencyBRL(pe.amount)}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <label className="flex flex-col gap-1.5">
+                <span className={labelClass}>Data de Faturamento</span>
+                <input
+                  type="date"
+                  required
+                  value={editingRow.billing_date}
+                  onChange={(e) =>
+                    updateRow(editingRow.key, { billing_date: e.target.value })
+                  }
+                  className={inputClass}
+                />
+              </label>
+              <label className="flex flex-col gap-1.5">
+                <span className={labelClass}>Nº da Invoice</span>
+                <input
+                  value={editingRow.invoice_number}
+                  onChange={(e) =>
+                    updateRow(editingRow.key, { invoice_number: e.target.value })
+                  }
+                  className={inputClass}
+                />
+              </label>
+              <label className="flex flex-col gap-1.5">
+                <span className={labelClass}>Data da Invoice</span>
+                <input
+                  type="date"
+                  value={editingRow.invoice_date}
+                  onChange={(e) =>
+                    updateRow(editingRow.key, { invoice_date: e.target.value })
+                  }
+                  className={inputClass}
+                />
+              </label>
+              <label className="flex flex-col gap-1.5">
+                <span className={labelClass}>Nova Data de Faturamento</span>
+                <input
+                  type="date"
+                  value={editingRow.new_billing_date}
+                  onChange={(e) =>
+                    updateRow(editingRow.key, {
+                      new_billing_date: e.target.value,
+                    })
+                  }
+                  className={inputClass}
+                />
+              </label>
+              <label className="flex flex-col gap-1.5">
+                <span className={labelClass}>Status</span>
+                <select
+                  value={editingRow.status}
+                  onChange={(e) =>
+                    updateRow(editingRow.key, {
+                      status: e.target.value as BillingRowState["status"],
+                    })
+                  }
+                  className={inputClass}
+                >
+                  <option value="nao_pago">Não pago</option>
+                  <option value="pago">Pago</option>
+                </select>
+              </label>
+              {editingRow.status === "pago" && (
+                <label className="flex flex-col gap-1.5">
+                  <span className={labelClass}>Data Real de Pagamento</span>
+                  <input
+                    type="date"
+                    value={editingRow.paid_date}
+                    onChange={(e) =>
+                      updateRow(editingRow.key, { paid_date: e.target.value })
+                    }
+                    className={inputClass}
+                  />
+                </label>
+              )}
+            </div>
+          </div>
+        )}
       </section>
 
       {(clientError || state?.error) && (

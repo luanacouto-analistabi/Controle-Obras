@@ -12,14 +12,20 @@ export default async function ProjectDetailPage({
   const { id } = await params;
   const supabase = await createClient();
 
-  const [{ data: project }, { data: paymentEvents }] = await Promise.all([
-    supabase.from("projects").select("*").eq("id", id).single(),
-    supabase
-      .from("payment_events")
-      .select("*")
-      .eq("project_id", id)
-      .order("created_at"),
-  ]);
+  const [{ data: project }, { data: paymentEvents }, { data: billingEvents }] =
+    await Promise.all([
+      supabase.from("projects").select("*").eq("id", id).single(),
+      supabase
+        .from("payment_events")
+        .select("*")
+        .eq("project_id", id)
+        .order("created_at"),
+      supabase
+        .from("billing_events")
+        .select("*")
+        .eq("project_id", id)
+        .order("created_at"),
+    ]);
 
   if (!project) {
     notFound();
@@ -59,6 +65,7 @@ export default async function ProjectDetailPage({
 
       <PaymentEventsTable
         paymentEvents={paymentEvents ?? []}
+        billingEvents={billingEvents ?? []}
         eapRows={eapRows}
         acceptanceTerms={acceptanceTerms}
       />

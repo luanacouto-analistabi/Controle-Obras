@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, type ReactNode } from "react";
 import {
   createProjectAction,
   updateProjectAction,
@@ -105,6 +105,7 @@ type ProjectFormProps = {
       mode: "edit";
       project: Project;
       paymentEvents: PaymentEvent[];
+      billingSection?: ReactNode;
     }
 );
 
@@ -120,6 +121,9 @@ export function ProjectForm(props: ProjectFormProps) {
 
   const [paymentRows, setPaymentRows] = useState<PaymentRowState[]>(() =>
     isEdit ? props.paymentEvents.map(paymentRowFromEvent) : []
+  );
+  const [editingPaymentKey, setEditingPaymentKey] = useState<string | null>(
+    null
   );
 
   const currentCc = isEdit ? props.project.cc : "";
@@ -171,9 +175,13 @@ export function ProjectForm(props: ProjectFormProps) {
     }))
   );
 
+  const editingPaymentRow =
+    paymentRows.find((row) => row.key === editingPaymentKey) ?? null;
+
   return (
-    <form action={formAction} className="flex flex-col gap-6">
-      <input type="hidden" name="paymentEvents" value={paymentEventsJson} />
+    <div className="flex flex-col gap-6">
+      <form id="project-form" action={formAction} className="flex flex-col gap-6">
+        <input type="hidden" name="paymentEvents" value={paymentEventsJson} />
 
       {/* Bloco 1 — Informações Gerais */}
       <section className="rounded-xl border border-border bg-white p-6 shadow-card">
@@ -286,7 +294,11 @@ export function ProjectForm(props: ProjectFormProps) {
           </h2>
           <button
             type="button"
-            onClick={() => setPaymentRows((rows) => [...rows, newPaymentRow()])}
+            onClick={() => {
+              const row = newPaymentRow();
+              setPaymentRows((rows) => [...rows, row]);
+              setEditingPaymentKey(row.key);
+            }}
             className="h-8 rounded-lg bg-maua-navy px-3 text-xs font-bold text-white hover:bg-[#2D3F4A]"
           >
             + Adicionar pagamento
@@ -299,200 +311,287 @@ export function ProjectForm(props: ProjectFormProps) {
           </p>
         )}
 
-        <div className="flex flex-col gap-4">
-          {paymentRows.map((row, index) => (
-            <div
-              key={row.key}
-              className="rounded-lg border border-border bg-surface p-4"
-            >
-              <div className="mb-3 flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-maua-navy/70">
-                  Pagamento {index + 1}
-                </span>
+        {paymentRows.length > 0 && (
+          <div className="overflow-x-auto rounded-lg border border-border">
+            <table className="w-full min-w-[900px] border-collapse text-sm">
+              <thead>
+                <tr>
+                  {[
+                    "Evento de pagamento",
+                    "Descrição da Invoice",
+                    "Valor",
+                    "Status",
+                    "Status da Medição",
+                    "Data Prevista Pagamento",
+                    "PO emitida",
+                    "",
+                  ].map((label) => (
+                    <th
+                      key={label}
+                      className="border-b border-border bg-maua-gray-50 px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-maua-navy/70"
+                    >
+                      {label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {paymentRows.map((row) => (
+                  <tr key={row.key} className="hover:bg-maua-gray-50">
+                    <td className="border-b border-border px-3 py-2">
+                      {row.payment_event || "–"}
+                    </td>
+                    <td className="border-b border-border px-3 py-2">
+                      {row.invoice_description || "–"}
+                    </td>
+                    <td className="border-b border-border px-3 py-2 text-right tabular-nums">
+                      {row.amount
+                        ? Number(row.amount).toLocaleString("pt-BR", {
+                            style: "currency",
+                            currency: "BRL",
+                          })
+                        : "–"}
+                    </td>
+                    <td className="border-b border-border px-3 py-2">
+                      {STATUS_OPTIONS.find((o) => o.value === row.status)
+                        ?.label ?? row.status}
+                    </td>
+                    <td className="border-b border-border px-3 py-2">
+                      {MEASUREMENT_STATUS_OPTIONS.find(
+                        (o) => o.value === row.measurement_status
+                      )?.label ?? row.measurement_status}
+                    </td>
+                    <td className="border-b border-border px-3 py-2 tabular-nums">
+                      {row.expected_payment_date
+                        ? new Intl.DateTimeFormat("pt-BR").format(
+                            new Date(`${row.expected_payment_date}T00:00:00`)
+                          )
+                        : "–"}
+                    </td>
+                    <td className="border-b border-border px-3 py-2">
+                      {row.po_issued ? "Sim" : "Não"}
+                    </td>
+                    <td className="border-b border-border px-3 py-2 text-right">
+                      <button
+                        type="button"
+                        onClick={() => setEditingPaymentKey(row.key)}
+                        className="text-xs font-semibold text-maua-navy hover:underline"
+                      >
+                        Editar
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {editingPaymentRow && (
+          <div className="mt-4 rounded-lg border border-[#F18213]/40 bg-surface p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-maua-navy/70">
+                {editingPaymentRow.id ? "Editar pagamento" : "Novo pagamento"}
+              </span>
+              <div className="flex gap-3">
                 <button
                   type="button"
                   onClick={() =>
                     setPaymentRows((rows) =>
-                      rows.filter((r) => r.key !== row.key)
+                      rows.filter((r) => r.key !== editingPaymentRow.key)
                     )
                   }
                   className="text-xs font-semibold text-red-600 hover:underline"
                 >
                   Remover
                 </button>
-              </div>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                <label className="flex flex-col gap-1.5">
-                  <span className={labelClass}>Evento de pagamento</span>
-                  <select
-                    required
-                    value={row.payment_event}
-                    onChange={(e) =>
-                      updatePaymentRow(row.key, {
-                        payment_event: e.target.value,
-                      })
-                    }
-                    className={inputClass}
-                  >
-                    <option value="" disabled>
-                      Selecione...
-                    </option>
-                    {(row.payment_event &&
-                    !PAYMENT_EVENT_OPTIONS.includes(row.payment_event)
-                      ? [row.payment_event, ...PAYMENT_EVENT_OPTIONS]
-                      : PAYMENT_EVENT_OPTIONS
-                    ).map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="flex flex-col gap-1.5">
-                  <span className={labelClass}>Descrição da Invoice</span>
-                  <input
-                    value={row.invoice_description}
-                    onChange={(e) =>
-                      updatePaymentRow(row.key, {
-                        invoice_description: e.target.value,
-                      })
-                    }
-                    className={inputClass}
-                  />
-                </label>
-                <label className="flex flex-col gap-1.5">
-                  <span className={labelClass}>Condição de pagamento</span>
-                  <input
-                    placeholder="ex.: 10 dias"
-                    value={row.payment_condition}
-                    onChange={(e) =>
-                      updatePaymentRow(row.key, {
-                        payment_condition: e.target.value,
-                      })
-                    }
-                    className={inputClass}
-                  />
-                </label>
-                <label className="flex flex-col gap-1.5">
-                  <span className={labelClass}>Data Prevista de Pagamento</span>
-                  <input
-                    type="date"
-                    value={row.expected_payment_date}
-                    onChange={(e) =>
-                      updatePaymentRow(row.key, {
-                        expected_payment_date: e.target.value,
-                      })
-                    }
-                    className={inputClass}
-                  />
-                </label>
-                <label className="flex flex-col gap-1.5">
-                  <span className={labelClass}>Valor (R$)</span>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    required
-                    value={row.amount}
-                    onChange={(e) =>
-                      updatePaymentRow(row.key, { amount: e.target.value })
-                    }
-                    className={inputClass}
-                  />
-                </label>
-                <label className="flex flex-col gap-1.5">
-                  <span className={labelClass}>Status</span>
-                  <select
-                    value={row.status}
-                    onChange={(e) =>
-                      updatePaymentRow(row.key, {
-                        status: e.target.value as PaymentRowState["status"],
-                      })
-                    }
-                    className={inputClass}
-                  >
-                    {STATUS_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="flex flex-col gap-1.5">
-                  <span className={labelClass}>Status da Medição</span>
-                  <select
-                    value={row.measurement_status}
-                    onChange={(e) =>
-                      updatePaymentRow(row.key, {
-                        measurement_status: e.target
-                          .value as PaymentRowState["measurement_status"],
-                      })
-                    }
-                    className={inputClass}
-                  >
-                    {MEASUREMENT_STATUS_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="flex items-center gap-2 pt-6">
-                  <input
-                    type="checkbox"
-                    checked={row.po_issued}
-                    onChange={(e) =>
-                      updatePaymentRow(row.key, {
-                        po_issued: e.target.checked,
-                      })
-                    }
-                    className="h-4 w-4 accent-[#F18213]"
-                  />
-                  <span className={labelClass}>PO emitida</span>
-                </label>
+                <button
+                  type="button"
+                  onClick={() => setEditingPaymentKey(null)}
+                  className="text-xs font-semibold text-maua-navy hover:underline"
+                >
+                  Concluir edição
+                </button>
               </div>
             </div>
-          ))}
-        </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <label className="flex flex-col gap-1.5">
+                <span className={labelClass}>Evento de pagamento</span>
+                <select
+                  required
+                  value={editingPaymentRow.payment_event}
+                  onChange={(e) =>
+                    updatePaymentRow(editingPaymentRow.key, {
+                      payment_event: e.target.value,
+                    })
+                  }
+                  className={inputClass}
+                >
+                  <option value="" disabled>
+                    Selecione...
+                  </option>
+                  {(editingPaymentRow.payment_event &&
+                  !PAYMENT_EVENT_OPTIONS.includes(
+                    editingPaymentRow.payment_event
+                  )
+                    ? [editingPaymentRow.payment_event, ...PAYMENT_EVENT_OPTIONS]
+                    : PAYMENT_EVENT_OPTIONS
+                  ).map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex flex-col gap-1.5">
+                <span className={labelClass}>Descrição da Invoice</span>
+                <input
+                  value={editingPaymentRow.invoice_description}
+                  onChange={(e) =>
+                    updatePaymentRow(editingPaymentRow.key, {
+                      invoice_description: e.target.value,
+                    })
+                  }
+                  className={inputClass}
+                />
+              </label>
+              <label className="flex flex-col gap-1.5">
+                <span className={labelClass}>Condição de pagamento</span>
+                <input
+                  placeholder="ex.: 10 dias"
+                  value={editingPaymentRow.payment_condition}
+                  onChange={(e) =>
+                    updatePaymentRow(editingPaymentRow.key, {
+                      payment_condition: e.target.value,
+                    })
+                  }
+                  className={inputClass}
+                />
+              </label>
+              <label className="flex flex-col gap-1.5">
+                <span className={labelClass}>Data Prevista de Pagamento</span>
+                <input
+                  type="date"
+                  value={editingPaymentRow.expected_payment_date}
+                  onChange={(e) =>
+                    updatePaymentRow(editingPaymentRow.key, {
+                      expected_payment_date: e.target.value,
+                    })
+                  }
+                  className={inputClass}
+                />
+              </label>
+              <label className="flex flex-col gap-1.5">
+                <span className={labelClass}>Valor (R$)</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  required
+                  value={editingPaymentRow.amount}
+                  onChange={(e) =>
+                    updatePaymentRow(editingPaymentRow.key, {
+                      amount: e.target.value,
+                    })
+                  }
+                  className={inputClass}
+                />
+              </label>
+              <label className="flex flex-col gap-1.5">
+                <span className={labelClass}>Status</span>
+                <select
+                  value={editingPaymentRow.status}
+                  onChange={(e) =>
+                    updatePaymentRow(editingPaymentRow.key, {
+                      status: e.target.value as PaymentRowState["status"],
+                    })
+                  }
+                  className={inputClass}
+                >
+                  {STATUS_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex flex-col gap-1.5">
+                <span className={labelClass}>Status da Medição</span>
+                <select
+                  value={editingPaymentRow.measurement_status}
+                  onChange={(e) =>
+                    updatePaymentRow(editingPaymentRow.key, {
+                      measurement_status: e.target
+                        .value as PaymentRowState["measurement_status"],
+                    })
+                  }
+                  className={inputClass}
+                >
+                  {MEASUREMENT_STATUS_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex items-center gap-2 pt-6">
+                <input
+                  type="checkbox"
+                  checked={editingPaymentRow.po_issued}
+                  onChange={(e) =>
+                    updatePaymentRow(editingPaymentRow.key, {
+                      po_issued: e.target.checked,
+                    })
+                  }
+                  className="h-4 w-4 accent-[#F18213]"
+                />
+                <span className={labelClass}>PO emitida</span>
+              </label>
+            </div>
+          </div>
+        )}
       </section>
+      </form>
+
+      {isEdit && props.billingSection}
 
       {isEdit && (
-        <>
-          <section className="rounded-xl border border-[#F18213]/40 bg-[#F18213]/5 p-6 shadow-card">
-            <h2 className="mb-1 text-base font-bold text-maua-navy">
-              Confirmar alteração
-            </h2>
-            <p className="mb-4 text-sm text-maua-gray-500">
-              Toda alteração exige o motivo — isso fica registrado no
-              histórico do projeto. O anexo do cronograma atualizado (PDF) é
-              opcional.
-            </p>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <label className="flex flex-col gap-1.5">
-                <span className={labelClass}>
-                  Cronograma atualizado (PDF) — opcional
-                </span>
-                <input
-                  type="file"
-                  name="document"
-                  accept="application/pdf"
-                  className={inputClass}
-                />
-              </label>
-              <label className="flex flex-col gap-1.5">
-                <span className={labelClass}>
-                  Motivo da alteração/postergação
-                </span>
-                <input
-                  name="change_reason"
-                  required
-                  placeholder="ex.: Atraso na aprovação do cliente"
-                  className={inputClass}
-                />
-              </label>
-            </div>
-          </section>
-        </>
+        <section className="rounded-xl border border-[#F18213]/40 bg-[#F18213]/5 p-6 shadow-card">
+          <h2 className="mb-1 text-base font-bold text-maua-navy">
+            Confirmar alteração
+          </h2>
+          <p className="mb-4 text-sm text-maua-gray-500">
+            Toda alteração exige o motivo — isso fica registrado no
+            histórico do projeto. O anexo do cronograma atualizado (PDF) é
+            opcional.
+          </p>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <label className="flex flex-col gap-1.5">
+              <span className={labelClass}>
+                Cronograma atualizado (PDF) — opcional
+              </span>
+              <input
+                type="file"
+                name="document"
+                form="project-form"
+                accept="application/pdf"
+                className={inputClass}
+              />
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className={labelClass}>
+                Motivo da alteração/postergação
+              </span>
+              <input
+                name="change_reason"
+                form="project-form"
+                required
+                placeholder="ex.: Atraso na aprovação do cliente"
+                className={inputClass}
+              />
+            </label>
+          </div>
+        </section>
       )}
 
       {state?.error && (
@@ -502,6 +601,7 @@ export function ProjectForm(props: ProjectFormProps) {
       <div className="flex justify-end">
         <button
           type="submit"
+          form="project-form"
           disabled={pending}
           className="h-11 rounded-lg bg-maua-navy px-6 text-sm font-bold text-white transition-colors hover:bg-[#2D3F4A] disabled:opacity-60"
         >
@@ -512,6 +612,6 @@ export function ProjectForm(props: ProjectFormProps) {
               : "Criar projeto"}
         </button>
       </div>
-    </form>
+    </div>
   );
 }

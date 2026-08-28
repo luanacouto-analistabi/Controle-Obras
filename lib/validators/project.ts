@@ -45,6 +45,10 @@ export const BillingEventInputSchema = z.object({
   invoice_number: z.string().optional().nullable(),
   invoice_date: z.string().optional().nullable(),
   new_billing_date: z.string().optional().nullable(),
+  status: z.enum(["pago", "nao_pago"], {
+    error: "Selecione o status do faturamento.",
+  }),
+  paid_date: z.string().optional().nullable(),
 });
 
 export const ProjectFormSchema = z.object({
