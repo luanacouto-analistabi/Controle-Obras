@@ -43,7 +43,7 @@ html {
   -webkit-font-smoothing: antialiased;
   /* Aumenta a fonte de toda a aplicação — as classes text-sm/base/lg/xl/2xl
      do Tailwind são em rem, então escalam junto com o tamanho raiz. */
-  font-size: 112.5%;
+  font-size: 106%;
 }
 
 body {
