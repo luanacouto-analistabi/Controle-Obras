@@ -1,9 +1,22 @@
 import { listProjectsWithFinancialSummary } from "@/lib/services/projects";
 import { KpiCards } from "@/components/dashboard/kpi-cards";
 import { ProjectsSummaryTable } from "@/components/dashboard/projects-summary-table";
+import { ClientFilter } from "@/components/filters/client-filter";
 
-export default async function DashboardPage() {
-  const rows = await listProjectsWithFinancialSummary();
+export default async function DashboardPage({
+  searchParams,
+}: PageProps<"/">) {
+  const params = await searchParams;
+  const selectedClient =
+    typeof params.cliente === "string" ? params.cliente : "";
+
+  const allRows = await listProjectsWithFinancialSummary();
+  const clients = [...new Set(allRows.map((row) => row.client))].sort((a, b) =>
+    a.localeCompare(b)
+  );
+  const rows = selectedClient
+    ? allRows.filter((row) => row.client === selectedClient)
+    : allRows;
 
   const totals = rows.reduce(
     (acc, row) => {
@@ -35,13 +48,16 @@ export default async function DashboardPage() {
 
   return (
     <div className="mx-auto flex max-w-[1400px] flex-col gap-5">
-      <div>
-        <h1 className="text-xl font-bold text-maua-navy">
-          Consolidado de Projetos
-        </h1>
-        <p className="text-sm text-maua-gray-500">
-          Visão geral de todos os projetos e seus indicadores financeiros.
-        </p>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold text-maua-navy">
+            Consolidado de Projetos
+          </h1>
+          <p className="text-sm text-maua-gray-500">
+            Visão geral de todos os projetos e seus indicadores financeiros.
+          </p>
+        </div>
+        <ClientFilter clients={clients} />
       </div>
 
       <KpiCards totals={totals} />

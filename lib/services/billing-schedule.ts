@@ -80,6 +80,7 @@ export type BillingCellStatus = "pago" | "previsto" | "vencido" | null;
 export type BillingScheduleRow = {
   key: string;
   cc: string;
+  client: string;
   category: "ESCOPO" | "VOR";
   vesselName: string;
   weekAmounts: number[];
@@ -139,7 +140,7 @@ export async function getBillingSchedule(
   const supabase = await createClient();
   const [{ data: projects, error: projectsError }, { data: events, error: eventsError }] =
     await Promise.all([
-      supabase.from("projects").select("id, cc, vessel_name"),
+      supabase.from("projects").select("id, cc, vessel_name, client"),
       supabase
         .from("payment_events")
         .select("project_id, payment_event, amount, expected_payment_date, paid_date")
@@ -168,6 +169,7 @@ export async function getBillingSchedule(
       row = {
         key,
         cc: project.cc,
+        client: project.client,
         category,
         vesselName: project.vessel_name,
         weekAmounts: buckets.map(() => 0),

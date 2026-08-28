@@ -12,6 +12,16 @@ export type ProjectSummaryRow = Project & {
   summary: ProjectFinancialSummary | null;
 };
 
+/** Lista de clientes distintos entre todos os projetos, para filtros. */
+export async function listDistinctClients(): Promise<string[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("projects").select("client");
+  if (error) throw error;
+  return [...new Set((data ?? []).map((row) => row.client))].sort((a, b) =>
+    a.localeCompare(b)
+  );
+}
+
 /** Projetos + indicadores financeiros agregados, para o dashboard consolidado. */
 export async function listProjectsWithFinancialSummary(): Promise<
   ProjectSummaryRow[]

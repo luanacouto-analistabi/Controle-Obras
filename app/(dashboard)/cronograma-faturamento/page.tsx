@@ -4,7 +4,9 @@ import {
   formatMonthLabel,
   type BillingCellStatus,
 } from "@/lib/services/billing-schedule";
+import { listDistinctClients } from "@/lib/services/projects";
 import { formatCurrencyBRL } from "@/lib/utils";
+import { ClientFilter } from "@/components/filters/client-filter";
 
 function currentYearMonth() {
   const now = new Date();
@@ -34,13 +36,24 @@ export default async function CronogramaFaturamentoPage({
   const defaults = currentYearMonth();
   const year = Number(params.ano) || defaults.year;
   const month = Number(params.mes) || defaults.month;
+  const selectedClient =
+    typeof params.cliente === "string" ? params.cliente : "";
 
-  const { buckets, rows } = await getBillingSchedule(year, month);
+  const [{ buckets, rows: allRows }, clients] = await Promise.all([
+    getBillingSchedule(year, month),
+    listDistinctClients(),
+  ]);
+  const rows = selectedClient
+    ? allRows.filter((row) => row.client === selectedClient)
+    : allRows;
 
   const prevMonth = month === 1 ? 12 : month - 1;
   const prevYear = month === 1 ? year - 1 : year;
   const nextMonth = month === 12 ? 1 : month + 1;
   const nextYear = month === 12 ? year + 1 : year;
+  const clienteQuery = selectedClient
+    ? `&cliente=${encodeURIComponent(selectedClient)}`
+    : "";
 
   const grandTotal = rows.reduce((sum, r) => sum + r.total, 0);
   const bucketTotals = buckets.map((_, i) =>
@@ -79,24 +92,27 @@ export default async function CronogramaFaturamentoPage({
             </span>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Link
-            href={`/cronograma-faturamento?ano=${prevYear}&mes=${prevMonth}`}
-            className={navButtonClass}
-            aria-label="Mês anterior"
-          >
-            ←
-          </Link>
-          <span className="w-28 text-center text-lg font-bold text-maua-navy">
-            {formatMonthLabel(year, month)}
-          </span>
-          <Link
-            href={`/cronograma-faturamento?ano=${nextYear}&mes=${nextMonth}`}
-            className={navButtonClass}
-            aria-label="Próximo mês"
-          >
-            →
-          </Link>
+        <div className="flex items-end gap-4">
+          <ClientFilter clients={clients} />
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/cronograma-faturamento?ano=${prevYear}&mes=${prevMonth}${clienteQuery}`}
+              className={navButtonClass}
+              aria-label="Mês anterior"
+            >
+              ←
+            </Link>
+            <span className="w-28 text-center text-lg font-bold text-maua-navy">
+              {formatMonthLabel(year, month)}
+            </span>
+            <Link
+              href={`/cronograma-faturamento?ano=${nextYear}&mes=${nextMonth}${clienteQuery}`}
+              className={navButtonClass}
+              aria-label="Próximo mês"
+            >
+              →
+            </Link>
+          </div>
         </div>
       </div>
 
