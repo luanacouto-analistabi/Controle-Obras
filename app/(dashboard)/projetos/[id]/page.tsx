@@ -19,6 +19,7 @@ export default async function ProjectDetailPage({
         .from("payment_events")
         .select("*")
         .eq("project_id", id)
+        .order("expected_payment_date", { ascending: true, nullsFirst: false })
         .order("created_at"),
       supabase
         .from("billing_events")
