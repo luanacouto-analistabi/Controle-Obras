@@ -7,6 +7,7 @@ import {
   Settings,
   FileCheck2,
   CalendarRange,
+  Receipt,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -24,6 +25,7 @@ const NAV_ITEMS: Array<{ href: string; label: string; icon: LucideIcon }> = [
     label: "Cronograma de Faturamento",
     icon: CalendarRange,
   },
+  { href: "/final-invoice", label: "Final Invoice", icon: Receipt },
 ];
 
 export function MainNav() {
