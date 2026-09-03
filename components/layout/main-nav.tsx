@@ -9,6 +9,7 @@ import {
   FileCheck2,
   CalendarRange,
   Receipt,
+  Gauge,
   ChevronDown,
   type LucideIcon,
 } from "lucide-react";
@@ -18,7 +19,7 @@ type NavItem = { href: string; label: string; icon: LucideIcon };
 
 const NAV_GROUPS: Array<{ label: string; items: NavItem[] }> = [
   {
-    label: "Menu Macro",
+    label: "Coordenação de Projetos",
     items: [
       { href: "/", label: "Consolidado", icon: LayoutDashboard },
       {
@@ -38,6 +39,10 @@ const NAV_GROUPS: Array<{ label: string; items: NavItem[] }> = [
       },
       { href: "/final-invoice", label: "Final Invoice", icon: Receipt },
     ],
+  },
+  {
+    label: "Dashboard",
+    items: [{ href: "/dashboard", label: "Dashboard", icon: Gauge }],
   },
 ];
 
