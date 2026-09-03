@@ -1,8 +1,10 @@
+import { Fragment } from "react";
 import Link from "next/link";
 import {
   getBillingSchedule,
   formatMonthLabel,
   type BillingCellStatus,
+  type BillingScheduleRow,
 } from "@/lib/services/billing-schedule";
 import { listDistinctClients } from "@/lib/services/projects";
 import { formatCurrencyBRL } from "@/lib/utils";
@@ -69,6 +71,36 @@ export default async function CronogramaFaturamentoPage({
   const navButtonClass =
     "flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-white text-maua-navy hover:bg-maua-gray-100";
 
+  type CcGroup = {
+    cc: string;
+    rows: BillingScheduleRow[];
+    totalWeekAmounts: number[];
+    totalWeekStatuses: BillingCellStatus[];
+    total: number;
+  };
+
+  const ccGroups = rows.reduce<CcGroup[]>((groups, row) => {
+    const lastGroup = groups[groups.length - 1];
+    if (lastGroup && lastGroup.cc === row.cc) {
+      lastGroup.rows.push(row);
+    } else {
+      groups.push({ cc: row.cc, rows: [row], totalWeekAmounts: [], totalWeekStatuses: [], total: 0 });
+    }
+    return groups;
+  }, []);
+  for (const group of ccGroups) {
+    group.totalWeekAmounts = buckets.map((_, i) =>
+      group.rows.reduce((sum, r) => sum + r.weekAmounts[i], 0)
+    );
+    group.totalWeekStatuses = buckets.map((_, i) =>
+      group.rows.reduce<BillingCellStatus>(
+        (status, r) => combineStatus(status, r.weekStatuses[i]),
+        null
+      )
+    );
+    group.total = group.rows.reduce((sum, r) => sum + r.total, 0);
+  }
+
   return (
     <div className="mx-auto flex max-w-[1400px] flex-col gap-5">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -134,7 +166,10 @@ export default async function CronogramaFaturamentoPage({
                 <th className="border-b border-border bg-maua-navy px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-white">
                   Centro de Custo
                 </th>
-                <th className="border-b border-border bg-maua-navy px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-white">
+                <th className="border-b border-l border-border bg-maua-navy px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-white">
+                  Tipo de Contrato
+                </th>
+                <th className="border-b border-l border-border bg-maua-navy px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-white">
                   Projeto
                 </th>
                 {buckets.map((bucket) => (
@@ -151,40 +186,77 @@ export default async function CronogramaFaturamentoPage({
               </tr>
             </thead>
             <tbody>
-              {rows.map((row) => (
-                <tr key={row.key} className="hover:bg-maua-gray-50">
-                  <td className="border-b border-border px-3 py-2 text-maua-navy">
-                    {row.cc} - {row.category}
-                  </td>
-                  <td className="border-b border-border px-3 py-2 text-maua-navy">
-                    {row.vesselName}
-                  </td>
-                  {row.weekAmounts.map((amount, i) => (
-                    <td
-                      key={buckets[i].label}
-                      className={`border-b border-l border-border px-3 py-2 text-right tabular-nums ${
-                        amount === 0
-                          ? ""
-                          : STATUS_BG[row.weekStatuses[i] ?? "previsto"]
-                      }`}
-                    >
-                      {amount === 0 ? (
-                        <span className="text-maua-gray-400">–</span>
-                      ) : (
-                        formatCurrencyBRL(amount)
+              {ccGroups.map((group) => (
+                <Fragment key={group.cc}>
+                  {group.rows.map((row, i) => (
+                    <tr key={row.key} className="hover:bg-maua-gray-50">
+                      {i === 0 && (
+                        <td
+                          rowSpan={group.rows.length + 1}
+                          className="border-b-2 border-maua-navy bg-white px-3 py-2 align-top font-semibold text-maua-navy"
+                        >
+                          {group.cc}
+                        </td>
                       )}
-                    </td>
+                      <td className="border-b border-l border-border px-3 py-2 text-maua-navy">
+                        {row.category}
+                      </td>
+                      <td className="border-b border-border px-3 py-2 text-maua-navy">
+                        {row.vesselName}
+                      </td>
+                      {row.weekAmounts.map((amount, j) => (
+                        <td
+                          key={buckets[j].label}
+                          className={`border-b border-l border-border px-3 py-2 text-right tabular-nums ${
+                            amount === 0
+                              ? ""
+                              : STATUS_BG[row.weekStatuses[j] ?? "previsto"]
+                          }`}
+                        >
+                          {amount === 0 ? (
+                            <span className="text-maua-gray-400">–</span>
+                          ) : (
+                            formatCurrencyBRL(amount)
+                          )}
+                        </td>
+                      ))}
+                      <td className="border-b border-l border-border bg-white px-3 py-2 text-right font-semibold tabular-nums">
+                        {formatCurrencyBRL(row.total)}
+                      </td>
+                    </tr>
                   ))}
-                  <td className="border-b border-l border-border bg-white px-3 py-2 text-right font-semibold tabular-nums">
-                    {formatCurrencyBRL(row.total)}
-                  </td>
-                </tr>
+                  <tr key={`${group.cc}-total`} className="bg-maua-gray-50">
+                    <td className="border-b-2 border-l border-maua-navy px-3 py-2 text-xs font-bold uppercase tracking-wide text-maua-navy">
+                      Total
+                    </td>
+                    <td className="border-b-2 border-maua-navy px-3 py-2" />
+                    {group.totalWeekAmounts.map((amount, j) => (
+                      <td
+                        key={buckets[j].label}
+                        className={`border-b-2 border-l border-maua-navy px-3 py-2 text-right font-semibold tabular-nums ${
+                          amount === 0
+                            ? ""
+                            : STATUS_BG[group.totalWeekStatuses[j] ?? "previsto"]
+                        }`}
+                      >
+                        {amount === 0 ? (
+                          <span className="text-maua-gray-400">–</span>
+                        ) : (
+                          formatCurrencyBRL(amount)
+                        )}
+                      </td>
+                    ))}
+                    <td className="border-b-2 border-l border-maua-navy bg-maua-gray-50 px-3 py-2 text-right font-bold tabular-nums">
+                      {formatCurrencyBRL(group.total)}
+                    </td>
+                  </tr>
+                </Fragment>
               ))}
             </tbody>
             <tfoot>
               <tr className="bg-maua-gray-100 font-bold">
-                <td colSpan={2} className="px-3 py-2 text-maua-navy">
-                  Total
+                <td colSpan={3} className="px-3 py-2 text-maua-navy">
+                  Total Geral
                 </td>
                 {bucketTotals.map((amount, i) => (
                   <td
