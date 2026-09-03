@@ -3,11 +3,16 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { ProjectFormSchema } from "@/lib/validators/project";
-import { createProject, updateProject } from "@/lib/services/project-mutations";
+import {
+  createProject,
+  deleteProject,
+  updateProject,
+} from "@/lib/services/project-mutations";
 import { getCurrentUser } from "@/lib/supabase/dal";
 import { getErrorMessage } from "@/lib/utils";
 
 export type ProjectFormState = { error?: string } | undefined;
+export type DeleteProjectState = { error?: string } | undefined;
 
 function parseFormPayload(formData: FormData) {
   const general = {
@@ -102,4 +107,27 @@ export async function updateProjectAction(
   revalidatePath("/configuracao");
   revalidatePath("/");
   redirect(`/configuracao/${projectId}`);
+}
+
+/* eslint-disable @typescript-eslint/no-unused-vars -- assinatura exigida pelo useActionState */
+export async function deleteProjectAction(
+  projectId: string,
+  _state: DeleteProjectState,
+  _formData: FormData
+): Promise<DeleteProjectState> {
+  /* eslint-enable @typescript-eslint/no-unused-vars */
+  const user = await getCurrentUser();
+  if (user.role !== "admin") {
+    return { error: "Só administradores podem excluir projetos." };
+  }
+
+  try {
+    await deleteProject(projectId);
+  } catch (err) {
+    return { error: getErrorMessage(err, "Erro ao excluir projeto.") };
+  }
+
+  revalidatePath("/final-invoice");
+  revalidatePath("/configuracao");
+  revalidatePath("/");
 }

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { listProjectsForConfig } from "@/lib/services/projects";
 import { getCurrentUser } from "@/lib/supabase/dal";
+import { DeleteProjectButton } from "@/components/final-invoice/delete-project-button";
 
 function formatDateTime(iso: string) {
   return new Intl.DateTimeFormat("pt-BR", {
@@ -15,6 +16,7 @@ export default async function FinalInvoicePage() {
     getCurrentUser(),
   ]);
   const canEdit = user.role !== "visualizador";
+  const canDelete = user.role === "admin";
 
   return (
     <div className="mx-auto flex max-w-[1200px] flex-col gap-5">
@@ -51,16 +53,21 @@ export default async function FinalInvoicePage() {
           <table className="w-full min-w-[860px] border-collapse text-base">
             <thead>
               <tr>
-                {["CC", "Obra", "Cliente", "Coordenador", "Última alteração"].map(
-                  (label) => (
-                    <th
-                      key={label}
-                      className="border-b border-border bg-maua-navy px-3 py-2 text-left text-xs font-bold uppercase tracking-wider text-white"
-                    >
-                      {label}
-                    </th>
-                  )
-                )}
+                {[
+                  "CC",
+                  "Obra",
+                  "Cliente",
+                  "Coordenador",
+                  "Última alteração",
+                  ...(canDelete ? [""] : []),
+                ].map((label) => (
+                  <th
+                    key={label}
+                    className="border-b border-border bg-maua-navy px-3 py-2 text-left text-xs font-bold uppercase tracking-wider text-white"
+                  >
+                    {label}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
@@ -95,6 +102,14 @@ export default async function FinalInvoicePage() {
                       </span>
                     )}
                   </td>
+                  {canDelete && (
+                    <td className="border-b border-border px-3 py-2 text-right">
+                      <DeleteProjectButton
+                        projectId={row.id}
+                        projectLabel={`${row.cc} - ${row.vessel_name}`}
+                      />
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

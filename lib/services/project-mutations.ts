@@ -450,3 +450,49 @@ export async function updateBillingEvents(
 
   return { changesCount: changes.length };
 }
+
+/**
+ * Apaga um projeto e tudo que depende dele (pagamentos, faturamento,
+ * histórico, termos de aceite, documentos do Final Invoice — todos com
+ * `on delete cascade` pra `projects`). Os arquivos no Storage não seguem a
+ * cascata do Postgres, então são removidos à parte, best-effort — se um
+ * arquivo já não existir ou a remoção falhar, não impede o delete do
+ * projeto (a linha do banco é a fonte de verdade da UI).
+ */
+export async function deleteProject(projectId: string) {
+  const supabase = await createClient();
+
+  const [
+    { data: projectDocs },
+    { data: acceptanceTerms },
+    { data: finalInvoiceDocs },
+  ] = await Promise.all([
+    supabase
+      .from("project_documents")
+      .select("storage_path")
+      .eq("project_id", projectId),
+    supabase
+      .from("os_acceptance_terms")
+      .select("storage_path")
+      .eq("project_id", projectId),
+    supabase
+      .from("final_invoice_documents")
+      .select("storage_path")
+      .eq("project_id", projectId),
+  ]);
+
+  const storagePaths = [
+    ...(projectDocs ?? []),
+    ...(acceptanceTerms ?? []),
+    ...(finalInvoiceDocs ?? []),
+  ]
+    .map((row) => row.storage_path)
+    .filter((path): path is string => Boolean(path));
+
+  if (storagePaths.length > 0) {
+    await supabase.storage.from("project-documents").remove(storagePaths);
+  }
+
+  const { error } = await supabase.from("projects").delete().eq("id", projectId);
+  if (error) throw error;
+}
