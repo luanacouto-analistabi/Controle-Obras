@@ -163,14 +163,14 @@ export default async function CronogramaFaturamentoPage({
           <table className="w-full min-w-[900px] border-collapse text-sm">
             <thead>
               <tr>
-                <th className="border-b border-border bg-maua-navy px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-white">
+                <th className="border-b border-border bg-maua-navy px-3 py-2 text-center text-[10px] font-bold uppercase tracking-wider text-white">
                   Centro de Custo
+                </th>
+                <th className="border-b border-l border-border bg-maua-navy px-3 py-2 text-center text-[10px] font-bold uppercase tracking-wider text-white">
+                  Projeto
                 </th>
                 <th className="border-b border-l border-border bg-maua-navy px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-white">
                   Tipo de Contrato
-                </th>
-                <th className="border-b border-l border-border bg-maua-navy px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-white">
-                  Projeto
                 </th>
                 {buckets.map((bucket) => (
                   <th
@@ -193,16 +193,21 @@ export default async function CronogramaFaturamentoPage({
                       {i === 0 && (
                         <td
                           rowSpan={group.rows.length + 1}
-                          className="border-b-2 border-maua-navy bg-white px-3 py-2 align-top font-semibold text-maua-navy"
+                          className="border-b-2 border-maua-gray-300 bg-white px-3 py-2 text-center align-middle font-semibold text-maua-navy"
                         >
                           {group.cc}
                         </td>
                       )}
+                      {i === 0 && (
+                        <td
+                          rowSpan={group.rows.length + 1}
+                          className="border-b-2 border-l border-maua-gray-300 bg-white px-3 py-2 text-center align-middle text-maua-navy"
+                        >
+                          {row.vesselName}
+                        </td>
+                      )}
                       <td className="border-b border-l border-border px-3 py-2 text-maua-navy">
                         {row.category}
-                      </td>
-                      <td className="border-b border-border px-3 py-2 text-maua-navy">
-                        {row.vesselName}
                       </td>
                       {row.weekAmounts.map((amount, j) => (
                         <td
@@ -226,18 +231,13 @@ export default async function CronogramaFaturamentoPage({
                     </tr>
                   ))}
                   <tr key={`${group.cc}-total`} className="bg-maua-gray-50">
-                    <td className="border-b-2 border-l border-maua-navy px-3 py-2 text-xs font-bold uppercase tracking-wide text-maua-navy">
+                    <td className="border-b-2 border-l border-maua-gray-300 px-3 py-2 text-xs font-bold uppercase tracking-wide text-maua-navy">
                       Total
                     </td>
-                    <td className="border-b-2 border-maua-navy px-3 py-2" />
                     {group.totalWeekAmounts.map((amount, j) => (
                       <td
                         key={buckets[j].label}
-                        className={`border-b-2 border-l border-maua-navy px-3 py-2 text-right font-semibold tabular-nums ${
-                          amount === 0
-                            ? ""
-                            : STATUS_BG[group.totalWeekStatuses[j] ?? "previsto"]
-                        }`}
+                        className="border-b-2 border-l border-maua-gray-300 px-3 py-2 text-right font-semibold tabular-nums"
                       >
                         {amount === 0 ? (
                           <span className="text-maua-gray-400">–</span>
@@ -246,7 +246,7 @@ export default async function CronogramaFaturamentoPage({
                         )}
                       </td>
                     ))}
-                    <td className="border-b-2 border-l border-maua-navy bg-maua-gray-50 px-3 py-2 text-right font-bold tabular-nums">
+                    <td className="border-b-2 border-l border-maua-gray-300 bg-maua-gray-50 px-3 py-2 text-right font-bold tabular-nums">
                       {formatCurrencyBRL(group.total)}
                     </td>
                   </tr>
