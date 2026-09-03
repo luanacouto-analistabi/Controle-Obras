@@ -66,7 +66,7 @@ const TEXT_STYLE: Record<1 | 2 | 3 | 4, string> = {
   1: "font-bold uppercase text-maua-navy",
   2: "font-semibold text-maua-navy",
   3: "text-maua-gray-500",
-  4: "text-maua-gray-400 italic",
+  4: "text-[#A20000] italic",
 };
 
 const DESCRIPTION_INDENT: Record<1 | 2 | 3 | 4, string> = {
