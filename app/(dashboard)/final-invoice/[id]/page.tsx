@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getProjectWithLastChange } from "@/lib/services/projects";
+import { getFinalInvoiceDataByProject } from "@/lib/services/final-invoice";
 import { FinalInvoiceTabs } from "@/components/final-invoice/final-invoice-tabs";
 
 function formatDateTime(iso: string) {
@@ -21,6 +22,7 @@ export default async function FinalInvoiceProjectPage({
   }
 
   const { project, lastChange } = data;
+  const dataByCategory = await getFinalInvoiceDataByProject(id);
 
   return (
     <div className="mx-auto flex max-w-[1200px] flex-col gap-5">
@@ -47,7 +49,7 @@ export default async function FinalInvoiceProjectPage({
         </p>
       </div>
 
-      <FinalInvoiceTabs />
+      <FinalInvoiceTabs projectId={project.id} dataByCategory={dataByCategory} />
     </div>
   );
 }

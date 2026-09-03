@@ -108,6 +108,34 @@ export type OsAcceptanceTerm = {
   updated_by: string | null;
 };
 
+export type FinalInvoiceDocument = {
+  id: string;
+  project_id: string;
+  category: string;
+  file_name: string;
+  storage_path: string;
+  uploaded_by: string | null;
+  uploaded_at: string;
+};
+
+export type FinalInvoiceItem = {
+  id: string;
+  document_id: string;
+  row_order: number;
+  item: string | null;
+  os: string | null;
+  description: string;
+  qty: string | null;
+  unit: string | null;
+  unit_price: string | null;
+  total_price: string | null;
+  updated_qty: string | null;
+  updated_value: string | null;
+  estaleiro_notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type ProjectFinancialSummary = {
   project_id: string;
   approved_amount: number;
@@ -138,6 +166,8 @@ export type Database = {
       project_documents: Table<ProjectDocument>;
       project_change_history: Table<ProjectChangeHistory>;
       os_acceptance_terms: Table<OsAcceptanceTerm>;
+      final_invoice_documents: Table<FinalInvoiceDocument>;
+      final_invoice_items: Table<FinalInvoiceItem>;
     };
     Views: {
       project_financial_summary: View<ProjectFinancialSummary>;
