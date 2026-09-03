@@ -8,6 +8,7 @@ import {
 } from "@/lib/actions/projects";
 import type { PaymentEvent, Project } from "@/types/database.types";
 import type { CentroCusto } from "@/lib/services/maua-scp";
+import { FinalInvoiceTabs } from "@/components/final-invoice/final-invoice-tabs";
 
 type PaymentRowState = {
   key: string;
@@ -90,6 +91,7 @@ const labelClass = "text-sm font-medium text-maua-navy";
 type ProjectFormProps = {
   centrosCusto: CentroCusto[];
   vesselNamesByCc: Record<string, string[]>;
+  variant?: "project" | "final-invoice";
 } & (
   | { mode: "create" }
   | {
@@ -102,6 +104,7 @@ type ProjectFormProps = {
 
 export function ProjectForm(props: ProjectFormProps) {
   const isEdit = props.mode === "edit";
+  const variant = props.variant ?? "project";
   const action = isEdit
     ? updateProjectAction.bind(null, props.project.id)
     : createProjectAction;
@@ -173,6 +176,11 @@ export function ProjectForm(props: ProjectFormProps) {
     <div className="flex flex-col gap-6">
       <form id="project-form" action={formAction} className="flex flex-col gap-6">
         <input type="hidden" name="paymentEvents" value={paymentEventsJson} />
+        <input
+          type="hidden"
+          name="origin"
+          value={variant === "final-invoice" ? "final-invoice" : "configuracao"}
+        />
 
       {/* Bloco 1 — Informações Gerais */}
       <section className="rounded-xl border border-border bg-white p-6 shadow-card">
@@ -278,6 +286,7 @@ export function ProjectForm(props: ProjectFormProps) {
       </section>
 
       {/* Bloco 2 — Informações de Pagamento */}
+      {variant === "project" && (
       <section className="rounded-xl border border-border bg-white p-6 shadow-card">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-base font-bold text-maua-navy">
@@ -500,7 +509,17 @@ export function ProjectForm(props: ProjectFormProps) {
           </div>
         )}
       </section>
+      )}
       </form>
+
+      {variant === "final-invoice" && (
+        <div>
+          <h2 className="mb-4 text-base font-bold text-maua-navy">
+            2. Configuração por categoria
+          </h2>
+          <FinalInvoiceTabs />
+        </div>
+      )}
 
       {isEdit && props.billingSection}
 

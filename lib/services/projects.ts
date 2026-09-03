@@ -131,6 +131,45 @@ export async function listProjectsForConfig(): Promise<ProjectConfigRow[]> {
   });
 }
 
+/** Projeto + última alteração, para telas que só precisam do cabeçalho (ex.: Final Invoice). */
+export async function getProjectWithLastChange(
+  id: string
+): Promise<{ project: Project; lastChange: LastChange | null } | null> {
+  const supabase = await createClient();
+
+  const [
+    { data: project, error: projectError },
+    { data: lastHistory },
+  ] = await Promise.all([
+    supabase.from("projects").select("*").eq("id", id).maybeSingle(),
+    supabase
+      .from("project_change_history")
+      .select("user_id, changed_at")
+      .eq("project_id", id)
+      .order("changed_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+  if (projectError) throw projectError;
+  if (!project) return null;
+
+  let lastChange: LastChange | null = null;
+  if (lastHistory?.user_id) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("id", lastHistory.user_id)
+      .maybeSingle();
+    lastChange = {
+      userId: lastHistory.user_id,
+      userName: profile?.full_name ?? null,
+      changedAt: lastHistory.changed_at,
+    };
+  }
+
+  return { project, lastChange };
+}
+
 export type ProjectEditData = {
   project: Project;
   paymentEvents: PaymentEvent[];

@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { listProjectsForConfig } from "@/lib/services/projects";
+import { getCurrentUser } from "@/lib/supabase/dal";
 
 function formatDateTime(iso: string) {
   return new Intl.DateTimeFormat("pt-BR", {
@@ -8,15 +10,29 @@ function formatDateTime(iso: string) {
 }
 
 export default async function FinalInvoicePage() {
-  const rows = await listProjectsForConfig();
+  const [rows, user] = await Promise.all([
+    listProjectsForConfig(),
+    getCurrentUser(),
+  ]);
+  const canEdit = user.role !== "visualizador";
 
   return (
     <div className="mx-auto flex max-w-[1200px] flex-col gap-5">
-      <div>
-        <h1 className="text-2xl font-bold text-maua-navy">Final Invoice</h1>
-        <p className="text-base text-maua-gray-500">
-          Projetos cadastrados com registros/configurações.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-maua-navy">Final Invoice</h1>
+          <p className="text-base text-maua-gray-500">
+            Projetos cadastrados com registros/configurações.
+          </p>
+        </div>
+        {canEdit && (
+          <Link
+            href="/final-invoice/novo"
+            className="h-10 rounded-lg bg-[#F18213] px-4 text-base font-bold text-white transition-colors hover:bg-[#D9730D] flex items-center"
+          >
+            + Novo projeto
+          </Link>
+        )}
       </div>
 
       {rows.length === 0 ? (
@@ -24,6 +40,11 @@ export default async function FinalInvoicePage() {
           <p className="text-base font-semibold text-maua-navy">
             Nenhum projeto cadastrado ainda
           </p>
+          {canEdit && (
+            <p className="mt-1 text-base text-maua-gray-500">
+              Comece criando um projeto pelo botão acima.
+            </p>
+          )}
         </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-border bg-white shadow-card">
@@ -45,8 +66,13 @@ export default async function FinalInvoicePage() {
             <tbody>
               {rows.map((row) => (
                 <tr key={row.id} className="hover:bg-maua-gray-50">
-                  <td className="border-b border-border px-3 py-2 font-semibold text-maua-navy">
-                    {row.cc}
+                  <td className="border-b border-border px-3 py-2 text-maua-navy">
+                    <Link
+                      href={`/final-invoice/${row.id}`}
+                      className="font-semibold text-maua-navy hover:underline"
+                    >
+                      {row.cc}
+                    </Link>
                   </td>
                   <td className="border-b border-border px-3 py-2 text-maua-navy">
                     {row.vessel_name}

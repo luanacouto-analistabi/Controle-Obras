@@ -51,8 +51,13 @@ export async function createProjectAction(
     return { error: getErrorMessage(err, "Erro ao criar projeto.") };
   }
 
-  revalidatePath("/configuracao");
+  const origin = String(formData.get("origin") ?? "configuracao");
   revalidatePath("/");
+  if (origin === "final-invoice") {
+    revalidatePath("/final-invoice");
+    redirect(`/final-invoice/${projectId}`);
+  }
+  revalidatePath("/configuracao");
   redirect(`/configuracao/${projectId}`);
 }
 
