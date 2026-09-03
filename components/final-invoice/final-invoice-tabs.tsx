@@ -21,6 +21,12 @@ export function FinalInvoiceTabs({
     FINAL_INVOICE_CATEGORIES[0]
   );
 
+  function goToNextTab() {
+    const currentIndex = FINAL_INVOICE_CATEGORIES.indexOf(activeTab);
+    const nextTab = FINAL_INVOICE_CATEGORIES[currentIndex + 1];
+    if (nextTab) setActiveTab(nextTab);
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap gap-1.5 border-b border-border pb-3">
@@ -48,6 +54,7 @@ export function FinalInvoiceTabs({
             projectId={projectId}
             category={activeTab}
             data={dataByCategory?.[activeTab] ?? null}
+            onSaved={goToNextTab}
           />
         ) : (
           <div className="rounded-xl border border-dashed border-border bg-white p-10 text-center shadow-card">

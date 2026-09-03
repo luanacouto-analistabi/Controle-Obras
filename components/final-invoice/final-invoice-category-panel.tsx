@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import {
   saveFinalInvoiceItemsAction,
   uploadFinalInvoiceDocumentAction,
@@ -9,37 +9,13 @@ import {
 import type { FinalInvoiceCategory } from "@/lib/constants/final-invoice";
 import type { FinalInvoiceCategoryData } from "@/lib/services/final-invoice";
 import type { FinalInvoiceItemInput } from "@/lib/validators/final-invoice";
-import { cn, formatCurrencyBRL, parseBRLNumber } from "@/lib/utils";
+import { formatCurrencyBRL, parseBRLNumber } from "@/lib/utils";
 
 const inputClass =
   "h-9 rounded-md border border-border bg-white px-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:border-accent w-full";
 const labelClass = "text-sm font-medium text-maua-navy";
 
-const LEVEL_OPTIONS: Array<{ value: 1 | 2 | 3 | 4; label: string }> = [
-  { value: 1, label: "1 · Seção" },
-  { value: 2, label: "2 · Item" },
-  { value: 3, label: "3 · Sublinha" },
-  { value: 4, label: "4 · Observação" },
-];
-
 type RowState = FinalInvoiceItemInput & { key: string };
-
-function emptyRow(): RowState {
-  return {
-    key: crypto.randomUUID(),
-    level: 2,
-    item: "",
-    os: "",
-    description: "",
-    qty: "",
-    unit: "",
-    unit_price: "",
-    total_price: "",
-    updated_qty: "",
-    updated_value: "",
-    estaleiro_notes: "",
-  };
-}
 
 function rowsFromData(data: FinalInvoiceCategoryData): RowState[] {
   return data.items.map((item) => ({
@@ -86,16 +62,16 @@ function computeSectionSubtotals(rows: RowState[]): Map<string, number> {
   return subtotals;
 }
 
-const ROW_STYLE: Record<1 | 2 | 3 | 4, string> = {
-  1: "bg-maua-navy/5 font-bold text-maua-navy",
+const TEXT_STYLE: Record<1 | 2 | 3 | 4, string> = {
+  1: "font-bold uppercase text-maua-navy",
   2: "font-semibold text-maua-navy",
   3: "text-maua-gray-500",
   4: "text-maua-gray-400 italic",
 };
 
 const DESCRIPTION_INDENT: Record<1 | 2 | 3 | 4, string> = {
-  1: "pl-1",
-  2: "pl-1",
+  1: "pl-0",
+  2: "pl-0",
   3: "pl-6",
   4: "pl-10",
 };
@@ -104,10 +80,12 @@ export function FinalInvoiceCategoryPanel({
   projectId,
   category,
   data,
+  onSaved,
 }: {
   projectId: string;
   category: FinalInvoiceCategory;
   data: FinalInvoiceCategoryData | null;
+  onSaved?: () => void;
 }) {
   const uploadAction = uploadFinalInvoiceDocumentAction.bind(
     null,
@@ -166,6 +144,7 @@ export function FinalInvoiceCategoryPanel({
       uploadFormAction={uploadFormAction}
       uploadPending={uploadPending}
       uploadError={uploadState?.error}
+      onSaved={onSaved}
     />
   );
 }
@@ -177,6 +156,7 @@ function FinalInvoiceItemsEditor({
   uploadFormAction,
   uploadPending,
   uploadError,
+  onSaved,
 }: {
   projectId: string;
   category: FinalInvoiceCategory;
@@ -184,6 +164,7 @@ function FinalInvoiceItemsEditor({
   uploadFormAction: (formData: FormData) => void;
   uploadPending: boolean;
   uploadError: string | undefined;
+  onSaved?: () => void;
 }) {
   const [rows, setRows] = useState<RowState[]>(() => rowsFromData(data));
   const [showReupload, setShowReupload] = useState(false);
@@ -206,6 +187,16 @@ function FinalInvoiceItemsEditor({
     FinalInvoiceActionState,
     FormData
   >(saveAction, undefined);
+
+  // Avança pro próximo menu assim que o salvamento é confirmado — aqui é
+  // uma notificação pro componente pai (troca a aba dele), não um sync de
+  // estado local, por isso o efeito é apropriado.
+  useEffect(() => {
+    if (saveState?.success && !saveState.error) {
+      onSaved?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [saveState]);
 
   function updateRow(key: string, patch: Partial<RowState>) {
     setRows((current) =>
@@ -302,11 +293,10 @@ function FinalInvoiceItemsEditor({
       )}
 
       <div className="overflow-x-auto rounded-xl border border-border bg-white shadow-card">
-        <table className="w-full min-w-[1500px] border-collapse text-sm">
+        <table className="w-full min-w-[1300px] text-sm">
           <thead>
             <tr>
               {[
-                "Nível",
                 "Item",
                 "OS",
                 "Descrição",
@@ -317,11 +307,10 @@ function FinalInvoiceItemsEditor({
                 "Quantidade Atualizada",
                 "Valor Atualizado",
                 "Observações do Estaleiro (Se aplicável)",
-                "",
               ].map((label) => (
                 <th
                   key={label}
-                  className="border-b border-border bg-maua-gray-50 px-2 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-maua-navy/70"
+                  className="bg-maua-gray-50 px-3 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider text-maua-navy/70 first:rounded-tl-xl last:rounded-tr-xl"
                 >
                   {label}
                 </th>
@@ -329,104 +318,43 @@ function FinalInvoiceItemsEditor({
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => {
+            {rows.map((row, index) => {
               const isSection = row.level === 1;
               return (
                 <tr
                   key={row.key}
-                  className={cn(
-                    "hover:bg-maua-gray-50",
-                    isSection && "border-t-2 border-t-maua-navy/30"
-                  )}
+                  className={
+                    isSection
+                      ? `bg-maua-navy/5 ${index > 0 ? "border-t-8 border-t-white" : ""}`
+                      : "hover:bg-maua-gray-50"
+                  }
                 >
-                  <td className="border-b border-border p-1">
-                    <select
-                      value={row.level}
-                      onChange={(e) =>
-                        updateRow(row.key, {
-                          level: Number(e.target.value) as RowState["level"],
-                        })
-                      }
-                      className={`${inputClass} w-32`}
-                    >
-                      {LEVEL_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
+                  <td className={`px-3 py-2 align-top ${TEXT_STYLE[row.level]}`}>
+                    {row.item}
                   </td>
-                  <td className="border-b border-border p-1">
-                    <input
-                      value={row.item}
-                      onChange={(e) =>
-                        updateRow(row.key, { item: e.target.value })
-                      }
-                      className={`${inputClass} w-16 ${ROW_STYLE[row.level]}`}
-                    />
+                  <td className="px-3 py-2 align-top text-maua-gray-500">
+                    {row.os}
                   </td>
-                  <td className="border-b border-border p-1">
-                    <input
-                      value={row.os}
-                      onChange={(e) =>
-                        updateRow(row.key, { os: e.target.value })
-                      }
-                      className={`${inputClass} w-20`}
-                    />
+                  <td
+                    className={`px-3 py-2 align-top ${DESCRIPTION_INDENT[row.level]} ${TEXT_STYLE[row.level]}`}
+                  >
+                    {row.description}
                   </td>
-                  <td className="border-b border-border p-1">
-                    <input
-                      value={row.description}
-                      onChange={(e) =>
-                        updateRow(row.key, { description: e.target.value })
-                      }
-                      className={`${inputClass} min-w-[260px] ${DESCRIPTION_INDENT[row.level]} ${ROW_STYLE[row.level]}`}
-                    />
+                  <td className="px-3 py-2 align-top text-right tabular-nums text-maua-gray-500">
+                    {row.qty}
                   </td>
-                  <td className="border-b border-border p-1">
-                    <input
-                      value={row.qty}
-                      onChange={(e) =>
-                        updateRow(row.key, { qty: e.target.value })
-                      }
-                      className={`${inputClass} w-20`}
-                    />
+                  <td className="px-3 py-2 align-top text-maua-gray-500">
+                    {row.unit}
                   </td>
-                  <td className="border-b border-border p-1">
-                    <input
-                      value={row.unit}
-                      onChange={(e) =>
-                        updateRow(row.key, { unit: e.target.value })
-                      }
-                      className={`${inputClass} w-24`}
-                    />
+                  <td className="px-3 py-2 align-top text-right tabular-nums text-maua-gray-500">
+                    {row.unit_price}
                   </td>
-                  <td className="border-b border-border p-1">
-                    <input
-                      value={row.unit_price}
-                      onChange={(e) =>
-                        updateRow(row.key, { unit_price: e.target.value })
-                      }
-                      disabled={isSection}
-                      className={`${inputClass} w-28 disabled:bg-maua-gray-50`}
-                    />
+                  <td className="px-3 py-2 align-top text-right font-semibold tabular-nums text-maua-navy">
+                    {isSection
+                      ? formatCurrencyBRL(sectionSubtotals.get(row.key) ?? 0)
+                      : row.total_price}
                   </td>
-                  <td className="border-b border-border p-1">
-                    {isSection ? (
-                      <div className="flex h-9 w-32 items-center justify-end rounded-md bg-maua-gray-100 px-2 text-sm font-bold text-maua-navy tabular-nums">
-                        {formatCurrencyBRL(sectionSubtotals.get(row.key) ?? 0)}
-                      </div>
-                    ) : (
-                      <input
-                        value={row.total_price}
-                        onChange={(e) =>
-                          updateRow(row.key, { total_price: e.target.value })
-                        }
-                        className={`${inputClass} w-28`}
-                      />
-                    )}
-                  </td>
-                  <td className="border-b border-l border-[#F18213]/40 bg-[#F18213]/5 p-1">
+                  <td className="bg-[#F18213]/5 px-3 py-1.5 align-top">
                     <input
                       value={row.updated_qty}
                       onChange={(e) =>
@@ -435,7 +363,7 @@ function FinalInvoiceItemsEditor({
                       className={`${inputClass} w-28`}
                     />
                   </td>
-                  <td className="border-b border-[#F18213]/40 bg-[#F18213]/5 p-1">
+                  <td className="bg-[#F18213]/5 px-3 py-1.5 align-top">
                     <input
                       value={row.updated_value}
                       onChange={(e) =>
@@ -444,7 +372,7 @@ function FinalInvoiceItemsEditor({
                       className={`${inputClass} w-28`}
                     />
                   </td>
-                  <td className="border-b border-[#F18213]/40 bg-[#F18213]/5 p-1">
+                  <td className="bg-[#F18213]/5 px-3 py-1.5 align-top">
                     <input
                       value={row.estaleiro_notes}
                       onChange={(e) =>
@@ -455,19 +383,6 @@ function FinalInvoiceItemsEditor({
                       className={`${inputClass} min-w-[220px]`}
                     />
                   </td>
-                  <td className="border-b border-border p-1 text-right">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setRows((current) =>
-                          current.filter((r) => r.key !== row.key)
-                        )
-                      }
-                      className="text-xs font-semibold text-red-600 hover:underline"
-                    >
-                      Remover
-                    </button>
-                  </td>
                 </tr>
               );
             })}
@@ -475,15 +390,7 @@ function FinalInvoiceItemsEditor({
         </table>
       </div>
 
-      <div className="flex items-center justify-between">
-        <button
-          type="button"
-          onClick={() => setRows((current) => [...current, emptyRow()])}
-          className="h-9 rounded-lg border border-border bg-white px-3 text-xs font-bold text-maua-navy hover:bg-maua-gray-100"
-        >
-          + Adicionar linha
-        </button>
-
+      <div className="flex items-center justify-end">
         <form action={saveFormAction} className="flex items-center gap-3">
           <input type="hidden" name="items" value={itemsJson} />
           {saveState?.error && (
