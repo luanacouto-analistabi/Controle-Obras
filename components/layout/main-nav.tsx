@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 
 const NAV_ITEMS: Array<{ href: string; label: string; icon: LucideIcon }> = [
   { href: "/", label: "Consolidado", icon: LayoutDashboard },
-  { href: "/configuracao", label: "Configuração", icon: Settings },
+  { href: "/configuracao", label: "Configurações / Atualizações", icon: Settings },
   {
     href: "/termo-aceite",
     label: "Atualização Termo de Aceite",

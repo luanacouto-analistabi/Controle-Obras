@@ -49,6 +49,7 @@ export const BillingEventInputSchema = z.object({
     error: "Selecione o status do faturamento.",
   }),
   paid_date: z.string().optional().nullable(),
+  po_issued: z.boolean(),
 });
 
 export const ProjectFormSchema = z.object({

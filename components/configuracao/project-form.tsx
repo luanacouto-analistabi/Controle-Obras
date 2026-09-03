@@ -38,15 +38,6 @@ const STATUS_OPTIONS: Array<{
   { value: "po_sem_saldo", label: "PO sem saldo" },
 ];
 
-const MEASUREMENT_STATUS_OPTIONS: Array<{
-  value: PaymentRowState["measurement_status"];
-  label: string;
-}> = [
-  { value: "aprovada", label: "Aprovada" },
-  { value: "em_discussao", label: "Em discussão" },
-  { value: "prevista", label: "Prevista" },
-];
-
 const PAYMENT_EVENT_OPTIONS = [
   "Parcela Contratual",
   "VOR - 50%",
@@ -321,9 +312,7 @@ export function ProjectForm(props: ProjectFormProps) {
                     "Descrição da Invoice",
                     "Valor",
                     "Status",
-                    "Status da Medição",
                     "Data Prevista Pagamento",
-                    "PO emitida",
                     "",
                   ].map((label) => (
                     <th
@@ -356,20 +345,12 @@ export function ProjectForm(props: ProjectFormProps) {
                       {STATUS_OPTIONS.find((o) => o.value === row.status)
                         ?.label ?? row.status}
                     </td>
-                    <td className="border-b border-border px-3 py-2">
-                      {MEASUREMENT_STATUS_OPTIONS.find(
-                        (o) => o.value === row.measurement_status
-                      )?.label ?? row.measurement_status}
-                    </td>
                     <td className="border-b border-border px-3 py-2 tabular-nums">
                       {row.expected_payment_date
                         ? new Intl.DateTimeFormat("pt-BR").format(
                             new Date(`${row.expected_payment_date}T00:00:00`)
                           )
                         : "–"}
-                    </td>
-                    <td className="border-b border-border px-3 py-2">
-                      {row.po_issued ? "Sim" : "Não"}
                     </td>
                     <td className="border-b border-border px-3 py-2 text-right">
                       <button
@@ -514,38 +495,6 @@ export function ProjectForm(props: ProjectFormProps) {
                     </option>
                   ))}
                 </select>
-              </label>
-              <label className="flex flex-col gap-1.5">
-                <span className={labelClass}>Status da Medição</span>
-                <select
-                  value={editingPaymentRow.measurement_status}
-                  onChange={(e) =>
-                    updatePaymentRow(editingPaymentRow.key, {
-                      measurement_status: e.target
-                        .value as PaymentRowState["measurement_status"],
-                    })
-                  }
-                  className={inputClass}
-                >
-                  {MEASUREMENT_STATUS_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="flex items-center gap-2 pt-6">
-                <input
-                  type="checkbox"
-                  checked={editingPaymentRow.po_issued}
-                  onChange={(e) =>
-                    updatePaymentRow(editingPaymentRow.key, {
-                      po_issued: e.target.checked,
-                    })
-                  }
-                  className="h-4 w-4 accent-[#F18213]"
-                />
-                <span className={labelClass}>PO emitida</span>
               </label>
             </div>
           </div>

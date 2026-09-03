@@ -15,6 +15,7 @@ type BillingRowState = {
   new_billing_date: string;
   status: "pago" | "nao_pago";
   paid_date: string;
+  po_issued: boolean;
 };
 
 function newBillingRow(): BillingRowState {
@@ -27,6 +28,7 @@ function newBillingRow(): BillingRowState {
     new_billing_date: "",
     status: "nao_pago",
     paid_date: "",
+    po_issued: false,
   };
 }
 
@@ -44,6 +46,7 @@ function billingRowFromEvent(
     new_billing_date: event.new_billing_date ?? "",
     status: linkedPaymentEvent?.paid_date ? "pago" : "nao_pago",
     paid_date: linkedPaymentEvent?.paid_date ?? "",
+    po_issued: linkedPaymentEvent?.po_issued ?? false,
   };
 }
 
@@ -124,6 +127,7 @@ export function BillingForm({
           row.status === "nao_pago" ? row.new_billing_date || null : null,
         status: row.status,
         paid_date: row.status === "pago" ? row.paid_date || null : null,
+        po_issued: row.po_issued,
       }))
     )
   );
@@ -183,6 +187,7 @@ export function BillingForm({
                     "Valor Faturado",
                     "Status",
                     "Data Real de Pagamento",
+                    "PO emitida",
                     "",
                   ].map((label) => (
                     <th
@@ -230,6 +235,9 @@ export function BillingForm({
                       </td>
                       <td className="border-b border-border px-3 py-2 tabular-nums">
                         {row.status === "pago" ? formatDate(row.paid_date) : "–"}
+                      </td>
+                      <td className="border-b border-border px-3 py-2">
+                        {row.po_issued ? "Sim" : "Não"}
                       </td>
                       <td className="border-b border-border px-3 py-2 text-right">
                         <button
@@ -390,6 +398,17 @@ export function BillingForm({
                   />
                 </label>
               )}
+              <label className="flex items-center gap-2 pt-6">
+                <input
+                  type="checkbox"
+                  checked={editingRow.po_issued}
+                  onChange={(e) =>
+                    updateRow(editingRow.key, { po_issued: e.target.checked })
+                  }
+                  className="h-4 w-4 accent-[#F18213]"
+                />
+                <span className={labelClass}>PO emitida</span>
+              </label>
             </div>
           </div>
         )}

@@ -385,6 +385,13 @@ export async function updateBillingEvents(
         new_value: paidStatusLabel(newPaidDate),
       });
     }
+    if (Boolean(pe?.po_issued) !== event.po_issued) {
+      changes.push({
+        field_name: `Pagamento "${pe?.payment_event ?? ""}" — PO emitida`,
+        old_value: pe?.po_issued ? "Sim" : "Não",
+        new_value: event.po_issued ? "Sim" : "Não",
+      });
+    }
   }
 
   if (changes.length === 0) {
@@ -411,10 +418,12 @@ export async function updateBillingEvents(
       : await supabase.from("billing_events").insert(row);
     if (error) throw error;
 
-    const paidUpdate =
-      event.status === "pago"
+    const paidUpdate = {
+      ...(event.status === "pago"
         ? { paid_date: event.paid_date ?? null, paid_amount: row.billed_amount }
-        : { paid_date: null, paid_amount: null };
+        : { paid_date: null, paid_amount: null }),
+      po_issued: event.po_issued,
+    };
     const { error: paidError } = await supabase
       .from("payment_events")
       .update(paidUpdate)
