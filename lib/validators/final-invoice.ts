@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const FinalInvoiceItemInputSchema = z.object({
+  level: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]).default(2),
   item: z.string().optional().default(""),
   os: z.string().optional().default(""),
   description: z.string().optional().default(""),

@@ -122,6 +122,7 @@ export type FinalInvoiceItem = {
   id: string;
   document_id: string;
   row_order: number;
+  level: 1 | 2 | 3 | 4;
   item: string | null;
   os: string | null;
   description: string;

@@ -6,6 +6,7 @@ import type { FinalInvoiceCategory } from "@/lib/constants/final-invoice";
 import { sanitizeStorageFileName } from "@/lib/utils";
 
 export type FinalInvoiceItemInput = {
+  level: 1 | 2 | 3 | 4;
   item: string;
   os: string;
   description: string;
@@ -74,6 +75,7 @@ export async function replaceFinalInvoiceDocument(
       parsedRows.map((row, index) => ({
         document_id: document.id,
         row_order: index,
+        level: row.level,
         item: row.item,
         os: row.os,
         description: row.description,

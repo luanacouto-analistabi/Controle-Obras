@@ -17,6 +17,21 @@ export function formatCurrencyBRL(value: number): string {
 }
 
 /**
+ * Lê um valor monetário em texto livre (célula editável de "Preço total
+ * R$") como número — aceita formato BR ("1.234,56") ou texto vazio/não
+ * numérico, que vira 0 em vez de travar a soma de um subtotal.
+ */
+export function parseBRLNumber(value: string): number {
+  const cleaned = value.replace(/[^\d,.-]/g, "").trim();
+  if (!cleaned) return 0;
+  const normalized = cleaned.includes(",")
+    ? cleaned.replace(/\./g, "").replace(",", ".")
+    : cleaned;
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+/**
  * Extrai uma mensagem de erro legível. Erros do supabase-js (PostgrestError,
  * StorageError etc.) não são instâncias de `Error` — só `err instanceof
  * Error` perde a mensagem real e cai sempre no fallback genérico.
