@@ -109,6 +109,45 @@ export async function updateProjectAction(
   redirect(`/configuracao/${projectId}`);
 }
 
+/**
+ * Edição das Informações Gerais de um projeto a partir da tela de Final
+ * Invoice — mesma mutação (updateProject) da edição em Configuração, mas
+ * sem exigir motivo/PDF do cronograma (isso é específico do fluxo de
+ * Configuração). O motivo gravado no histórico fica fixo, só pra rastrear
+ * a origem da alteração.
+ */
+export async function updateFinalInvoiceProjectAction(
+  projectId: string,
+  _state: ProjectFormState,
+  formData: FormData
+): Promise<ProjectFormState> {
+  const user = await getCurrentUser();
+  if (user.role === "visualizador") {
+    return { error: "Você não tem permissão para editar projetos." };
+  }
+
+  const parsed = ProjectFormSchema.safeParse(parseFormPayload(formData));
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
+  }
+
+  try {
+    await updateProject(projectId, parsed.data, {
+      reason: "Editado via Final Invoice",
+      documentFile: null,
+      userId: user.id,
+    });
+  } catch (err) {
+    return { error: getErrorMessage(err, "Erro ao salvar alteração.") };
+  }
+
+  revalidatePath(`/final-invoice/${projectId}`);
+  revalidatePath("/final-invoice");
+  revalidatePath("/configuracao");
+  revalidatePath("/");
+  redirect(`/final-invoice/${projectId}`);
+}
+
 /* eslint-disable @typescript-eslint/no-unused-vars -- assinatura exigida pelo useActionState */
 export async function deleteProjectAction(
   projectId: string,

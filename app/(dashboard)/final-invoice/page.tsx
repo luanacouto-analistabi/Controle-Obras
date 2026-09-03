@@ -59,7 +59,7 @@ export default async function FinalInvoicePage() {
                   "Cliente",
                   "Coordenador",
                   "Última alteração",
-                  ...(canDelete ? [""] : []),
+                  ...(canEdit || canDelete ? [""] : []),
                 ].map((label) => (
                   <th
                     key={label}
@@ -102,12 +102,24 @@ export default async function FinalInvoicePage() {
                       </span>
                     )}
                   </td>
-                  {canDelete && (
-                    <td className="border-b border-border px-3 py-2 text-right">
-                      <DeleteProjectButton
-                        projectId={row.id}
-                        projectLabel={`${row.cc} - ${row.vessel_name}`}
-                      />
+                  {(canEdit || canDelete) && (
+                    <td className="border-b border-border px-3 py-2">
+                      <div className="flex items-center justify-end gap-3">
+                        {canEdit && (
+                          <Link
+                            href={`/final-invoice/${row.id}/editar`}
+                            className="text-xs font-semibold text-maua-navy hover:underline"
+                          >
+                            Editar
+                          </Link>
+                        )}
+                        {canDelete && (
+                          <DeleteProjectButton
+                            projectId={row.id}
+                            projectLabel={`${row.cc} - ${row.vessel_name}`}
+                          />
+                        )}
+                      </div>
                     </td>
                   )}
                 </tr>

@@ -4,11 +4,13 @@ import { useActionState, useState, type ReactNode } from "react";
 import {
   createProjectAction,
   updateProjectAction,
+  updateFinalInvoiceProjectAction,
   type ProjectFormState,
 } from "@/lib/actions/projects";
 import type { PaymentEvent, Project } from "@/types/database.types";
 import type { CentroCusto } from "@/lib/services/maua-scp";
 import { FinalInvoiceTabs } from "@/components/final-invoice/final-invoice-tabs";
+import type { FinalInvoiceDataByCategory } from "@/lib/services/final-invoice";
 
 type PaymentRowState = {
   key: string;
@@ -99,6 +101,7 @@ type ProjectFormProps = {
       project: Project;
       paymentEvents: PaymentEvent[];
       billingSection?: ReactNode;
+      finalInvoiceData?: FinalInvoiceDataByCategory;
     }
 );
 
@@ -106,7 +109,9 @@ export function ProjectForm(props: ProjectFormProps) {
   const isEdit = props.mode === "edit";
   const variant = props.variant ?? "project";
   const action = isEdit
-    ? updateProjectAction.bind(null, props.project.id)
+    ? variant === "final-invoice"
+      ? updateFinalInvoiceProjectAction.bind(null, props.project.id)
+      : updateProjectAction.bind(null, props.project.id)
     : createProjectAction;
   const [state, formAction, pending] = useActionState<
     ProjectFormState,
@@ -517,13 +522,20 @@ export function ProjectForm(props: ProjectFormProps) {
           <h2 className="mb-4 text-base font-bold text-maua-navy">
             2. Configuração por categoria
           </h2>
-          <FinalInvoiceTabs />
+          {isEdit ? (
+            <FinalInvoiceTabs
+              projectId={props.project.id}
+              dataByCategory={props.finalInvoiceData ?? {}}
+            />
+          ) : (
+            <FinalInvoiceTabs />
+          )}
         </section>
       )}
 
-      {isEdit && props.billingSection}
+      {isEdit && variant === "project" && props.billingSection}
 
-      {isEdit && (
+      {isEdit && variant === "project" && (
         <section className="rounded-xl border border-[#F18213]/40 bg-[#F18213]/5 p-6 shadow-card">
           <h2 className="mb-1 text-base font-bold text-maua-navy">
             Confirmar alteração
