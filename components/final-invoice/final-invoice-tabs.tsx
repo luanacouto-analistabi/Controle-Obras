@@ -41,18 +41,27 @@ export function FinalInvoiceTabs({
         ))}
       </div>
 
-      {projectId ? (
-        <FinalInvoiceCategoryPanel
-          key={activeTab}
-          projectId={projectId}
-          category={activeTab}
-          data={dataByCategory?.[activeTab] ?? null}
-        />
+      {activeTab === "PPU" ? (
+        projectId ? (
+          <FinalInvoiceCategoryPanel
+            key={activeTab}
+            projectId={projectId}
+            category={activeTab}
+            data={dataByCategory?.[activeTab] ?? null}
+          />
+        ) : (
+          <div className="rounded-xl border border-dashed border-border bg-white p-10 text-center shadow-card">
+            <p className="text-base font-semibold text-maua-navy">{activeTab}</p>
+            <p className="mt-1 text-base text-maua-gray-500">
+              Salve o projeto para poder enviar o PDF desta categoria.
+            </p>
+          </div>
+        )
       ) : (
         <div className="rounded-xl border border-dashed border-border bg-white p-10 text-center shadow-card">
           <p className="text-base font-semibold text-maua-navy">{activeTab}</p>
           <p className="mt-1 text-base text-maua-gray-500">
-            Salve o projeto para poder enviar o PDF desta categoria.
+            Nenhum dado cadastrado ainda para esta aba.
           </p>
         </div>
       )}
