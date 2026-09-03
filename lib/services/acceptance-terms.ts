@@ -2,6 +2,7 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 import type { OsAcceptanceTerm } from "@/types/database.types";
+import { sanitizeStorageFileName } from "@/lib/utils";
 
 /** Termos de aceite já lançados para um projeto, indexados por cod_os. */
 export async function listOsAcceptanceTerms(
@@ -37,7 +38,8 @@ export async function saveOsAcceptanceTerm(
     null;
 
   if (opts.documentFile) {
-    const storagePath = `${projectId}/termos-aceite/${codOs}/${Date.now()}-${opts.documentFile.name}`;
+    const safeFileName = sanitizeStorageFileName(opts.documentFile.name);
+    const storagePath = `${projectId}/termos-aceite/${codOs}/${Date.now()}-${safeFileName}`;
     const { error: uploadError } = await supabase.storage
       .from("project-documents")
       .upload(storagePath, opts.documentFile, { contentType: "application/pdf" });

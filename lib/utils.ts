@@ -35,6 +35,21 @@ export function getErrorMessage(err: unknown, fallback: string): string {
 }
 
 /**
+ * Sanitiza um nome de arquivo pra usar como chave no Supabase Storage —
+ * ele rejeita chaves com espaço, acento ou outros caracteres fora de
+ * [A-Za-z0-9._-] ("Invalid key"). O nome original (com acento/espaço) fica
+ * só no `file_name` exibido na tela; isso aqui é só para o storage_path.
+ */
+const COMBINING_DIACRITICS = new RegExp("[\\u0300-\\u036f]", "g");
+
+export function sanitizeStorageFileName(fileName: string): string {
+  const withoutDiacritics = fileName
+    .normalize("NFD")
+    .replace(COMBINING_DIACRITICS, "");
+  return withoutDiacritics.replace(/[^a-zA-Z0-9._-]+/g, "_");
+}
+
+/**
  * Deduplica linhas da EAP por cod_os, mantendo a de maior data_inicio —
  * a mesma OS pode aparecer mais de uma vez (fases/períodos diferentes).
  */

@@ -11,6 +11,7 @@ import type {
   PaymentEventInput,
   ProjectFormInput,
 } from "@/lib/validators/project";
+import { sanitizeStorageFileName } from "@/lib/utils";
 
 type FieldChange = {
   field_name: string;
@@ -257,7 +258,8 @@ export async function updateProject(
   let documentId: string | null = null;
   if (opts.documentFile) {
     const nextVersion = (latestDoc?.version ?? 0) + 1;
-    const storagePath = `${projectId}/v${nextVersion}/${Date.now()}-${opts.documentFile.name}`;
+    const safeFileName = sanitizeStorageFileName(opts.documentFile.name);
+    const storagePath = `${projectId}/v${nextVersion}/${Date.now()}-${safeFileName}`;
 
     const { error: uploadError } = await supabase.storage
       .from("project-documents")

@@ -3,6 +3,7 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { parseFinalInvoicePdf } from "@/lib/services/final-invoice-pdf";
 import type { FinalInvoiceCategory } from "@/lib/constants/final-invoice";
+import { sanitizeStorageFileName } from "@/lib/utils";
 
 export type FinalInvoiceItemInput = {
   item: string;
@@ -33,7 +34,9 @@ export async function replaceFinalInvoiceDocument(
 
   const parsedRows = await parseFinalInvoicePdf(bytes);
 
-  const storagePath = `${projectId}/final-invoice/${category}/${Date.now()}-${file.name}`;
+  const safeCategory = sanitizeStorageFileName(category);
+  const safeFileName = sanitizeStorageFileName(file.name);
+  const storagePath = `${projectId}/final-invoice/${safeCategory}/${Date.now()}-${safeFileName}`;
   const { error: uploadError } = await supabase.storage
     .from("project-documents")
     .upload(storagePath, bytes, { contentType: "application/pdf" });
