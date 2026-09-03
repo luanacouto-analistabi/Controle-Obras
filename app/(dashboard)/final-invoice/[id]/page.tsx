@@ -11,6 +11,17 @@ function formatDateTime(iso: string) {
   }).format(new Date(iso));
 }
 
+function InfoField({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="text-[10px] font-bold uppercase tracking-wider text-maua-navy/60">
+        {label}
+      </span>
+      <span className="text-sm font-semibold text-maua-navy">{value}</span>
+    </div>
+  );
+}
+
 export default async function FinalInvoiceProjectPage({
   params,
 }: PageProps<"/final-invoice/[id]">) {
@@ -33,20 +44,30 @@ export default async function FinalInvoiceProjectPage({
         ← Voltar ao Final Invoice
       </Link>
 
-      <div>
-        <h1 className="text-xl font-bold text-maua-navy">
-          {project.vessel_name} · CC {project.cc}
-        </h1>
-        <p className="text-sm text-maua-gray-500">
-          {project.client} · {project.project_coordinator}
-          {lastChange && (
-            <>
-              {" · Última alteração por "}
-              {lastChange.userName ?? "—"} em{" "}
-              {formatDateTime(lastChange.changedAt)}
-            </>
-          )}
-        </p>
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-maua-navy px-6 py-4 text-white shadow-card">
+        <div>
+          <p className="text-lg font-bold uppercase tracking-wide">
+            {project.vessel_name}
+          </p>
+          <p className="text-sm text-white/70">
+            CC {project.cc} · {project.client}
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 rounded-xl border border-border bg-white p-6 shadow-card sm:grid-cols-4">
+        <InfoField label="Centro de Custo" value={project.cc} />
+        <InfoField label="Obra" value={project.vessel_name} />
+        <InfoField label="Cliente" value={project.client} />
+        <InfoField label="Coordenador" value={project.project_coordinator} />
+        <InfoField
+          label="Última Alteração"
+          value={
+            lastChange
+              ? `${lastChange.userName ?? "—"} em ${formatDateTime(lastChange.changedAt)}`
+              : "Sem alterações"
+          }
+        />
       </div>
 
       <FinalInvoiceTabs projectId={project.id} dataByCategory={dataByCategory} />

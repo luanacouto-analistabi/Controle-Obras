@@ -8,6 +8,7 @@ import {
 } from "@/lib/actions/projects";
 import type { PaymentEvent, Project } from "@/types/database.types";
 import type { CentroCusto } from "@/lib/services/maua-scp";
+import { FinalInvoiceTabs } from "@/components/final-invoice/final-invoice-tabs";
 
 type PaymentRowState = {
   key: string;
@@ -510,6 +511,15 @@ export function ProjectForm(props: ProjectFormProps) {
       </section>
       )}
       </form>
+
+      {variant === "final-invoice" && (
+        <section className="rounded-xl border border-border bg-white p-6 shadow-card">
+          <h2 className="mb-4 text-base font-bold text-maua-navy">
+            2. Configuração por categoria
+          </h2>
+          <FinalInvoiceTabs />
+        </section>
+      )}
 
       {isEdit && props.billingSection}
 
